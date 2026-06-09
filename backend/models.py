@@ -1,7 +1,7 @@
 from sqlalchemy import create_engine, Column, Integer, String, Boolean, ForeignKey, DateTime
 from sqlalchemy.orm import declarative_base
 
-db = create_engine("sqlite:///banco.bd", echo=True)
+db = create_engine("sqlite:///banco.db", echo=True)
 Base = declarative_base()
 
 class Agente(Base):
@@ -11,7 +11,7 @@ class Agente(Base):
     senha = Column("senha", String)
     cargo = Column("cargo", String)
     nome = Column("nome", String)
-    ubs_atuante = Column("usb_atuante", ForeignKey("UBS.id"))
+    ubs_atuante = Column("ubs_atuante", ForeignKey("UBS.id"))
     email = Column("email", String)
 
     def __init__(self, senha, cargo, nome, ubs_atuante, email):
@@ -56,4 +56,19 @@ class Notificacao(Base):
     acs_ace_id = Column("acs_ace_id", ForeignKey("Agentes.id"))
     status = Column("status", String)
     rascunho = Column("rascunho", Boolean)
+
+    def __init__(self, nome, tipo_evento, categoria, data_envio, pessoas_animais_infectados_afetados, local_ocorrencia, meio_identificacao, continuidade_situacao, descricao, acs_ace_id, status="EM ANDAMENTO", rascunho=True):
+        self.nome = nome
+        self.tipo_evento = tipo_evento
+        self.categoria = categoria
+        self.data_envio = data_envio
+        self.pessoas_animais_infectados_afetados = pessoas_animais_infectados_afetados
+        self.local_ocorrencia = local_ocorrencia
+        self.meio_identificacao = meio_identificacao
+        self.continuidade_situacao = continuidade_situacao
+        self.descricao = descricao
+        self.acs_ace_id = acs_ace_id
+        self.status = status
+        self.rascunho = rascunho
+        
     
