@@ -22,7 +22,7 @@ class Agente(Base):
         self.email = email
 
 
-class UBS(Base):
+class UBS(Base): #Adicionar Classe Agente_UBS
     __tablename__ = "UBS"
 
     id = Column("id", Integer, primary_key=True, autoincrement=True)

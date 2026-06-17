@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException
-from dependencies import create_session
+from dependencies import create_session, token_verification
 from schemas import NotificacaoSchema, AgenteSchema, UBSSchema
 from models import Agente, UBS, Notificacao
 from sqlalchemy.orm import Session
@@ -7,8 +7,25 @@ from security import get_hashed_password
 from sqlalchemy.exc import SQLAlchemyError
 import datetime
 
-ubs_router = APIRouter(prefix="/ubs", tags=["ubs"])
+ubs_router = APIRouter(prefix="/ubs", tags=["ubs"], dependencies=[Depends(token_verification)])
 
+
+
+@ubs_router.post("/criar_agente")
+async def criar_agente(agente_schema : AgenteSchema, session : Session = Depends(create_session)):
+    agente = session.query(Agente).filter(Agente.email == agente_schema.email).first()
+
+    if agente:
+        raise HTTPException(status_code=400, detail="Agente já cadastrado no sistema!")
+    
+    senha_hash = get_hashed_password(agente_schema.senha)
+    agente = Agente(senha_hash, agente_schema.cargo, agente_schema.nome, agente_schema.ubs_atuante, agente_schema.email)
+    session.add(agente)
+    session.commit()
+
+    return {
+        "response" : f"Email {agente_schema.email} cadastrado com sucesso"
+    }
 
 
 @ubs_router.post("/criar_ubs")

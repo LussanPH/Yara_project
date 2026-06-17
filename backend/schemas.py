@@ -39,4 +39,12 @@ class NotificacaoSchema(BaseModel):
     class Config:
         from_attributes = True
 
+
+class LoginSchema(BaseModel):
+    email : str
+    senha : str
+    tipo_acesso : str
+
+    class Config:
+        from_attributes = True
     

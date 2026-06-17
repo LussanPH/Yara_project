@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException
-from dependencies import create_session
+from dependencies import create_session, token_verification
 from schemas import NotificacaoSchema, AgenteSchema
 from models import Agente, UBS, Notificacao
 from sqlalchemy.orm import Session
@@ -7,24 +7,7 @@ from security import get_hashed_password
 import datetime
 
 
-acs_ace_router = APIRouter(prefix="/agentes", tags=["Agentes"])
-
-
-@acs_ace_router.post("/criar_agente")
-async def criar_agente(agente_schema : AgenteSchema, session : Session = Depends(create_session)):
-    agente = session.query(Agente).filter(Agente.email == agente_schema.email).first()
-
-    if agente:
-        raise HTTPException(status_code=400, detail="Agente já cadastrado no sistema!")
-    
-    senha_hash = get_hashed_password(agente_schema.senha)
-    agente = Agente(senha_hash, agente_schema.cargo, agente_schema.nome, agente_schema.ubs_atuante, agente_schema.email)
-    session.add(agente)
-    session.commit()
-
-    return {
-        "response" : f"Email {agente_schema.email} cadastrado com sucesso"
-    }
+acs_ace_router = APIRouter(prefix="/agentes", tags=["Agentes"], dependencies=[Depends(token_verification)])
 
 
 
@@ -55,16 +38,18 @@ async def criar_notificacao(id_agente : int, notificacao : NotificacaoSchema, se
 
     print(data_hora)
     
-    notificacao_nova = Notificacao("Surto de Varíola",
-                              "DOENÇA", "Doença Contagiante",  
-                              data_hora, 10, 
-                              "Sapiranga", 
-                              "Escola", 
-                              "Sim", 
-                              "Muitas crianças com sintomas correspondentes ao da varíola na mesma turma", 
+    notificacao_nova = Notificacao(notificacao.nome,
+                              notificacao.tipo_evento,
+                              notificacao.categoria,  
+                              notificacao.data_envio, 
+                              notificacao.pessoas_animais_infectados_afetados, 
+                              notificacao.local_ocorrencia, 
+                              notificacao.meio_identificacao, 
+                              notificacao.continuidade_situacao, 
+                              notificacao.descricao, 
                               agente.id, 
-                              "EM ANDAMENTO", 
-                              False)
+                              notificacao.status, 
+                              notificacao.rascunho)
     
     session.add(notificacao_nova)
     session.commit()
