@@ -30,11 +30,26 @@ def token_verification(token:str = Depends(oauth2_schema), session:Session = Dep
             usuario = session.query(Agente).filter(Agente.id == usuario_id).first()
         elif tipo_usuario == "UBS":
             usuario = session.query(UBS).filter(UBS.id == usuario_id).first()
+        else:
+            usuario = session.query(Agente).filter(Agente.id == usuario_id).first() #Para testes
 
         if not usuario:
             raise HTTPException(status_code=401, detail="Usuário Inválido.")
         
-        return usuario
+        return dic_info
+    
+
+class RoleChecker:
+    def __init__(self, allowed_roles : list):
+        self.allowed_roles = allowed_roles
+
+    def __call__(self, usuario : dict = Depends(token_verification)):
+        if usuario.get("tipo") not in self.allowed_roles:
+            raise HTTPException(status_code=403, detail="Acesso Negado.")
         
+        return usuario
+    
+somente_Agente = RoleChecker(["ACS/ACE"])
+somente_UBS = RoleChecker(["UBS"])
 
 

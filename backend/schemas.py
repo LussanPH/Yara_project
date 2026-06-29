@@ -32,19 +32,9 @@ class NotificacaoSchema(BaseModel):
     meio_identificacao : str
     continuidade_situacao : str
     descricao : str
-    acs_ace_id : int
     status : str
     rascunho : bool
     
-    class Config:
-        from_attributes = True
-
-
-class LoginSchema(BaseModel):
-    email : str
-    senha : str
-    tipo_acesso : str
-
     class Config:
         from_attributes = True
     

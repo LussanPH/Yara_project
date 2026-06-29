@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException
-from dependencies import create_session, token_verification
+from dependencies import create_session, token_verification, somente_Agente
 from schemas import NotificacaoSchema, AgenteSchema
 from models import Agente, UBS, Notificacao
 from sqlalchemy.orm import Session
@@ -7,7 +7,7 @@ from security import get_hashed_password
 import datetime
 
 
-acs_ace_router = APIRouter(prefix="/agentes", tags=["Agentes"], dependencies=[Depends(token_verification)])
+acs_ace_router = APIRouter(prefix="/agentes", tags=["Agentes"], dependencies=[Depends(somente_Agente)])
 
 
 
@@ -18,7 +18,7 @@ async def listar_notificacoes(id_agente : int, session : Session = Depends(creat
     if not agente:
         raise HTTPException(status_code=400, detail="Usuário não encontrado no sistema!")
 
-    notificacoes = session.query(Notificacao).filter(Notificacao.id == Agente).all()
+    notificacoes = session.query(Notificacao).filter(Notificacao.acs_ace_id == agente.id).all()
 
     return {
         "Notificações" : notificacoes

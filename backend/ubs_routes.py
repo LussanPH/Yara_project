@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException
-from dependencies import create_session, token_verification
+from dependencies import create_session, token_verification, somente_UBS
 from schemas import NotificacaoSchema, AgenteSchema, UBSSchema
 from models import Agente, UBS, Notificacao
 from sqlalchemy.orm import Session
@@ -7,7 +7,7 @@ from security import get_hashed_password
 from sqlalchemy.exc import SQLAlchemyError
 import datetime
 
-ubs_router = APIRouter(prefix="/ubs", tags=["ubs"], dependencies=[Depends(token_verification)])
+ubs_router = APIRouter(prefix="/ubs", tags=["ubs"], dependencies=[Depends(somente_UBS)])
 
 
 

@@ -61,10 +61,10 @@ async def login(dados_login:OAuth2PasswordRequestForm = Depends(), tipo_login:st
 @auth_router.post("/refresh")
 async def create_access_token(usuario : Agente | UBS = Depends(token_verification)):
     
-    if str(type(usuario)) == "Agente":
+    if isinstance(usuario, Agente):
         access_token = create_jwt(usuario.id, "ACS/ACE")
 
-    elif str(type(usuario)) == "UBS":
+    elif isinstance(usuario, UBS):
         access_token = create_jwt(usuario.id, "UBS")
 
     return {
