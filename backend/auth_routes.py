@@ -8,7 +8,7 @@ from datetime import timedelta, datetime, timezone
 from config import ACCESS_TOKEN_EXPIRATE_MINUTES, ALGORITHM, SECRET_KEY
 from jose import jwt, JWTError
 
-
+#Cria o jwt_token para com os dados de id, tipo e data de expiração do token
 def create_jwt(id_usuario, tipo, duracao_token = timedelta(minutes=ACCESS_TOKEN_EXPIRATE_MINUTES)):
     data_expiracao = datetime.now(timezone.utc) + duracao_token
 
@@ -49,7 +49,7 @@ async def login(dados_login:OAuth2PasswordRequestForm = Depends(), tipo_login:st
         raise HTTPException(status_code=400, detail="Usuário não encontrado ou senha inválida.")
     
     access_token = create_jwt(usuario.id, tipo_login)
-    refresh_token = create_jwt(usuario.id, tipo_login, timedelta(days=7))
+    refresh_token = create_jwt(usuario.id, tipo_login, timedelta(days=1))
 
     return {
         "access_token" : access_token,
@@ -59,13 +59,13 @@ async def login(dados_login:OAuth2PasswordRequestForm = Depends(), tipo_login:st
 
 
 @auth_router.post("/refresh")
-async def create_access_token(usuario : Agente | UBS = Depends(token_verification)):
+async def create_access_token(dict_info : Agente | UBS = Depends(token_verification)):
     
-    if isinstance(usuario, Agente):
-        access_token = create_jwt(usuario.id, "ACS/ACE")
+    if dict_info.get("tipo") == "ACS/ACE":
+        access_token = create_jwt(dict_info.get("sub"), "ACS/ACE")
 
-    elif isinstance(usuario, UBS):
-        access_token = create_jwt(usuario.id, "UBS")
+    elif dict_info.get("tipo") == "UBS":
+        access_token = create_jwt(dict_info.get("sub"), "UBS")
 
     return {
         "access_token" : access_token,

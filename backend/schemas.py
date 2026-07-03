@@ -2,6 +2,7 @@ from pydantic import BaseModel
 from typing import Optional
 import datetime
 
+#Schema dos Agentes ACS/ACE
 class AgenteSchema(BaseModel):
     senha : str
     cargo : str
@@ -12,9 +13,10 @@ class AgenteSchema(BaseModel):
     class Config:
         from_attributes = True
 
+#Schema da conta UBS
 class UBSSchema(BaseModel):
     senha : str
-    ubs : str
+    ubs : int
     nome : str
     municipio : str
     email : str
@@ -22,6 +24,7 @@ class UBSSchema(BaseModel):
     class Config:
         from_attributes = True
 
+#Schema das notificações a serem postadas pelos agentes acs/ace
 class NotificacaoSchema(BaseModel):
     nome : str
     tipo_evento : str
@@ -35,6 +38,15 @@ class NotificacaoSchema(BaseModel):
     status : str
     rascunho : bool
     
+    class Config:
+        from_attributes = True
+
+#Schema dos dados de uma UBS
+class DadosUBSSchema(BaseModel):
+    nome: str
+    municipio: str
+    estado: str
+
     class Config:
         from_attributes = True
     

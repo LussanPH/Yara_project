@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException
 from dependencies import create_session, token_verification, somente_UBS
-from schemas import NotificacaoSchema, AgenteSchema, UBSSchema
-from models import Agente, UBS, Notificacao
+from schemas import NotificacaoSchema, AgenteSchema, UBSSchema, DadosUBSSchema
+from models import Agente, UBS, Notificacao, Dados_UBS
 from sqlalchemy.orm import Session
 from security import get_hashed_password
 from sqlalchemy.exc import SQLAlchemyError
@@ -28,16 +28,31 @@ async def criar_agente(agente_schema : AgenteSchema, session : Session = Depends
     }
 
 
-@ubs_router.post("/criar_ubs")
-async def criar_ubs(ubs_schema : UBSSchema, session : Session = Depends(create_session)):
+@ubs_router.post("/criar_conta_ubs")
+async def criar_conta_ubs(ubs_schema : UBSSchema, session : Session = Depends(create_session)):
     ubs = session.query(UBS).filter(UBS.email == ubs_schema.email).first()
 
     if ubs:
-        raise HTTPException(status_code=400, detail="UBS já cadastrada no sistema!")
+        raise HTTPException(status_code=400, detail="Conta UBS já cadastrada no sistema!")
     
     senha_hashed = get_hashed_password(ubs_schema.senha)
     ubs_nova = UBS(senha_hashed, ubs_schema.nome, ubs_schema.ubs, ubs_schema.municipio, ubs_schema.email)
     session.add(ubs_nova)
     session.commit()
     
-    return {"message": "UBS criada com sucesso!"}
+    return {"message": "Conta UBS criada com sucesso!"}
+
+
+
+@ubs_router.post("/criar_ubs")
+async def criar_ubs(dados_ubs_schema : DadosUBSSchema, session: Session = Depends(create_session)):
+    dados_ubs = session.query(Dados_UBS).filter(Dados_UBS.nome == dados_ubs_schema.nome).first()
+
+    if dados_ubs:
+        raise HTTPException(status_code=400, detail=f"Dados da UBS {dados_ubs.nome} já cadastrada no sistema.")
+    
+    dados_ubs_nova = Dados_UBS(dados_ubs_schema.nome, dados_ubs_schema.municipio, dados_ubs_schema.estado)
+    session.add(dados_ubs_nova)
+    session.commit()
+
+    return {'message':f'Dados da UBS {dados_ubs_nova.nome} cadastrados com sucesso!'}
