@@ -46,6 +46,7 @@ class RoleChecker:
         self.allowed_roles = allowed_roles
 
     def __call__(self, dict_info : dict = Depends(token_verification)):
+        print(f'Tipo do login: {dict_info.get("tipo")}')
         if dict_info.get("tipo") not in self.allowed_roles:
             raise HTTPException(status_code=403, detail="Acesso Negado.")
         

@@ -2,6 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, Form
 from fastapi.security import OAuth2PasswordRequestForm
 from dependencies import create_session, token_verification
 from sqlalchemy.orm import Session
+from typing import Optional
 from models import Agente, UBS
 from security import verify_password
 from datetime import timedelta, datetime, timezone
@@ -11,6 +12,9 @@ from jose import jwt, JWTError
 #Cria o jwt_token para com os dados de id, tipo e data de expiração do token
 def create_jwt(id_usuario, tipo, duracao_token = timedelta(minutes=ACCESS_TOKEN_EXPIRATE_MINUTES)):
     data_expiracao = datetime.now(timezone.utc) + duracao_token
+
+    if tipo in ['ACS', 'ACE']:
+        tipo = 'ACS/ACE'
 
     dicionario_informacoes = {"sub":str(id_usuario), "exp":data_expiracao, "tipo":tipo}
 
@@ -42,7 +46,12 @@ auth_router = APIRouter(prefix="/auth", tags=["Autenticação"])
 
 @auth_router.post("/login")
 #Form = (None) Para testes
-async def login(dados_login:OAuth2PasswordRequestForm = Depends(), tipo_login:str = Form(None), session : Session = Depends(create_session)):
+async def login(dados_login:OAuth2PasswordRequestForm = Depends(), tipo_login:Optional[str] = Form(None), session : Session = Depends(create_session)):
+
+    if not tipo_login:
+        tipo_login = dados_login.client_id
+        print(tipo_login)
+
     usuario = login_auth(dados_login.username, dados_login.password, tipo_login, session)
 
     if not usuario:
