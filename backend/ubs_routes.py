@@ -10,7 +10,7 @@ import datetime
 ubs_router = APIRouter(prefix="/ubs", tags=["ubs"], dependencies=[Depends(somente_UBS)])
 
 
-
+#Criação de um agente
 @ubs_router.post("/criar_agente")
 async def criar_agente(agente_schema : AgenteSchema, session : Session = Depends(create_session)):
     agente = session.query(Agente).filter(Agente.email == agente_schema.email).first()
@@ -28,6 +28,7 @@ async def criar_agente(agente_schema : AgenteSchema, session : Session = Depends
     }
 
 
+#Criação de uma conta UBS
 @ubs_router.post("/criar_conta_ubs")
 async def criar_conta_ubs(ubs_schema : UBSSchema, session : Session = Depends(create_session)):
     ubs = session.query(UBS).filter(UBS.email == ubs_schema.email).first()
@@ -43,7 +44,7 @@ async def criar_conta_ubs(ubs_schema : UBSSchema, session : Session = Depends(cr
     return {"message": "Conta UBS criada com sucesso!"}
 
 
-
+#Criação de uma UBS
 @ubs_router.post("/criar_ubs")
 async def criar_ubs(dados_ubs_schema : DadosUBSSchema, session: Session = Depends(create_session)):
     dados_ubs = session.query(Dados_UBS).filter(Dados_UBS.nome == dados_ubs_schema.nome).first()

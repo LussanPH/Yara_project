@@ -17,7 +17,7 @@ def create_session():
     finally:
         session.close()
 
-#
+#Verificação da validade do jwt
 def token_verification(token:str = Depends(oauth2_schema), session:Session = Depends(create_session)):
     if SECRET_KEY and ALGORITHM:
         try:
@@ -32,15 +32,37 @@ def token_verification(token:str = Depends(oauth2_schema), session:Session = Dep
             usuario = session.query(Agente).filter(Agente.id == usuario_id).first()
         elif tipo_usuario == "UBS":
             usuario = session.query(UBS).filter(UBS.id == usuario_id).first()
-        else:
-            usuario = session.query(Agente).filter(Agente.id == usuario_id).first() #Para testes
 
         if not usuario:
             raise HTTPException(status_code=401, detail="Usuário Inválido.")
         
         return dict_info
-    
 
+
+
+#Com base no token, retorna o usuário que está logado atualmente
+def get_usuario(token:str = Depends(oauth2_schema), session:Session = Depends(create_session)):
+    if SECRET_KEY and ALGORITHM:
+        try:
+            dict_info = jwt.decode(token, SECRET_KEY, ALGORITHM)
+        except JWTError:
+            raise HTTPException(status_code=401, detail="Acesso Negado.")
+        
+        usuario_id = int(dict_info.get('sub'))
+        tipo_usuario = dict_info.get('tipo')
+
+        if tipo_usuario == 'ACS/ACE':
+            usuario = session.query(Agente).filter(Agente.id == usuario_id).first()
+        elif tipo_usuario == 'UBS':
+            usuario = session.query(UBS).filter(UBS.id == usuario_id).first()
+
+        if not usuario:
+            raise HTTPException(status_code=401, detail=f'Usuário {tipo_usuario} não encontrado no banco de dados.')
+        
+        return usuario
+
+
+#Classe para a restrição de caminhos com base no tipo do usuário
 class RoleChecker:
     def __init__(self, allowed_roles : list):
         self.allowed_roles = allowed_roles

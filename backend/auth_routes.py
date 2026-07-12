@@ -23,14 +23,14 @@ def create_jwt(id_usuario, tipo, duracao_token = timedelta(minutes=ACCESS_TOKEN_
 
     return jwt_codificado
 
-#VERIFICA SE O USUÁRIO ESTÁ PRESENTE NO BANCO DE DADOS E SE A SENHA É CORRESPONDENTE
+#Verifica se o login efetuado corresponde a um usuário do banco de dados correspondente ao seu respectivo tipo
 def login_auth(email, senha, tipo, session:Session):
-    if tipo == "ACS/ACE":
+    if tipo in ['ACS', 'ACE']:
         usuario = session.query(Agente).filter(Agente.email == email).first()
     elif tipo == "UBS":
         usuario = session.query(UBS).filter(UBS.email == email).first()
-    else:#PARA TESTE
-        usuario = session.query(Agente).filter(Agente.email == email).first()
+    else:
+        return False
 
     if not usuario:
         return False
@@ -44,13 +44,16 @@ def login_auth(email, senha, tipo, session:Session):
 auth_router = APIRouter(prefix="/auth", tags=["Autenticação"])
 
 
+#Endpoint de login do usuário
 @auth_router.post("/login")
 #Form = (None) Para testes
 async def login(dados_login:OAuth2PasswordRequestForm = Depends(), tipo_login:Optional[str] = Form(None), session : Session = Depends(create_session)):
-
-    if not tipo_login:
+    #Caso seja feito pelo authorize do docs do Fastapi, verifica o campo client_id para rastrear o tipo de usuário
+    if not tipo_login and dados_login.client_id:
         tipo_login = dados_login.client_id
-        print(tipo_login)
+
+    else:
+        raise HTTPException(status_code=400, detail="É preciso informar o tipo do usuário.")
 
     usuario = login_auth(dados_login.username, dados_login.password, tipo_login, session)
 
@@ -67,6 +70,7 @@ async def login(dados_login:OAuth2PasswordRequestForm = Depends(), tipo_login:Op
     }
 
 
+#Endpoint para a criação de um no access_token a partir do refresh_token
 @auth_router.post("/refresh")
 async def create_access_token(dict_info : Agente | UBS = Depends(token_verification)):
     

@@ -1,5 +1,6 @@
 import bcrypt
 
+#Cria uma senha encriptografada
 def get_hashed_password(senha:str):
     senha_bytes = senha.encode('utf-8')
 
@@ -10,6 +11,8 @@ def get_hashed_password(senha:str):
 
     return senha_hashed
 
+
+#Verifica se a senha inserida no login correponde com a senha encriptografada no banco de dados
 def verify_password(senha_login, senha_criptografada):
     senha_login_bytes = senha_login.encode('utf-8')
 
