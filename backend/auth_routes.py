@@ -25,7 +25,7 @@ def create_jwt(id_usuario, tipo, duracao_token = timedelta(minutes=ACCESS_TOKEN_
 
 #Verifica se o login efetuado corresponde a um usuário do banco de dados correspondente ao seu respectivo tipo
 def login_auth(email, senha, tipo, session:Session):
-    if tipo in ['ACS', 'ACE']:
+    if tipo == "ACS/ACE":
         usuario = session.query(Agente).filter(Agente.email == email).first()
     elif tipo == "UBS":
         usuario = session.query(UBS).filter(UBS.email == email).first()
@@ -49,11 +49,10 @@ auth_router = APIRouter(prefix="/auth", tags=["Autenticação"])
 #Form = (None) Para testes
 async def login(dados_login:OAuth2PasswordRequestForm = Depends(), tipo_login:Optional[str] = Form(None), session : Session = Depends(create_session)):
     #Caso seja feito pelo authorize do docs do Fastapi, verifica o campo client_id para rastrear o tipo de usuário
-    if not tipo_login and dados_login.client_id:
-        tipo_login = dados_login.client_id
 
-    else:
-        raise HTTPException(status_code=400, detail="É preciso informar o tipo do usuário.")
+    print(dados_login.username)
+    print(dados_login.password)
+    print(tipo_login)
 
     usuario = login_auth(dados_login.username, dados_login.password, tipo_login, session)
 

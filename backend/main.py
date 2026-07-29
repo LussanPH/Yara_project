@@ -3,6 +3,7 @@ from fastapi.security import OAuth2PasswordBearer
 from pyngrok import ngrok
 from contextlib import asynccontextmanager
 from config import NGROK_DOMAIN, NGROK_TOKEN, PORT
+from fastapi.middleware.cors import CORSMiddleware
 import uvicorn
 
 
@@ -24,6 +25,14 @@ async def lifespan(app : FastAPI):
 
 
 app = FastAPI(lifespan=lifespan)
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"], 
+    allow_headers=["*"],
+)
 
 from acs_ace_routes import acs_ace_router
 from ubs_routes import ubs_router
