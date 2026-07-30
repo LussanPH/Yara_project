@@ -4,6 +4,7 @@ from fastapi.security import OAuth2PasswordBearer
 from models import db, Agente, UBS
 from jose import jwt, JWTError
 from config import SECRET_KEY, ALGORITHM
+from datetime import datetime, timezone
 
 oauth2_schema = OAuth2PasswordBearer(tokenUrl="auth/login")
 
@@ -25,8 +26,9 @@ def token_verification(token:str = Depends(oauth2_schema), session:Session = Dep
             usuario_id = int(dict_info.get("sub"))
             tipo_usuario = dict_info.get("tipo")
 
-        except JWTError:
-            raise HTTPException(status_code=401, detail="Acesso Negado.")
+        except JWTError as e:
+            raise HTTPException(status_code=401, detail=f"Erro ao validar token: {e}")
+
         
         if tipo_usuario == "ACS/ACE":
             usuario = session.query(Agente).filter(Agente.id == usuario_id).first()
@@ -34,7 +36,7 @@ def token_verification(token:str = Depends(oauth2_schema), session:Session = Dep
             usuario = session.query(UBS).filter(UBS.id == usuario_id).first()
 
         if not usuario:
-            raise HTTPException(status_code=401, detail="Usuário Inválido.")
+            raise HTTPException(status_code=401, detail="Usuário não encontrado.")
         
         return dict_info
 
@@ -45,8 +47,9 @@ def get_usuario(token:str = Depends(oauth2_schema), session:Session = Depends(cr
     if SECRET_KEY and ALGORITHM:
         try:
             dict_info = jwt.decode(token, SECRET_KEY, ALGORITHM)
-        except JWTError:
-            raise HTTPException(status_code=401, detail="Acesso Negado.")
+
+        except JWTError as e:
+            raise HTTPException(status_code=401, detail=f"Erro ao validar token: {e}")
         
         usuario_id = int(dict_info.get('sub'))
         tipo_usuario = dict_info.get('tipo')
@@ -68,7 +71,6 @@ class RoleChecker:
         self.allowed_roles = allowed_roles
 
     def __call__(self, dict_info : dict = Depends(token_verification)):
-        print(f'Tipo do login: {dict_info.get("tipo")}')
         if dict_info.get("tipo") not in self.allowed_roles:
             raise HTTPException(status_code=403, detail="Acesso Negado.")
         

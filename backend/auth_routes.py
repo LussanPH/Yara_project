@@ -50,9 +50,12 @@ auth_router = APIRouter(prefix="/auth", tags=["Autenticação"])
 async def login(dados_login:OAuth2PasswordRequestForm = Depends(), tipo_login:Optional[str] = Form(None), session : Session = Depends(create_session)):
     #Caso seja feito pelo authorize do docs do Fastapi, verifica o campo client_id para rastrear o tipo de usuário
 
-    print(dados_login.username)
+    if tipo_login == None:
+        tipo_login = dados_login.client_id
+
+    """print(dados_login.username)
     print(dados_login.password)
-    print(tipo_login)
+    print(tipo_login)"""
 
     usuario = login_auth(dados_login.username, dados_login.password, tipo_login, session)
 
@@ -60,7 +63,8 @@ async def login(dados_login:OAuth2PasswordRequestForm = Depends(), tipo_login:Op
         raise HTTPException(status_code=400, detail="Usuário não encontrado ou senha inválida.")
     
     access_token = create_jwt(usuario.id, tipo_login)
-    refresh_token = create_jwt(usuario.id, tipo_login, timedelta(days=1))
+    refresh_token = create_jwt(usuario.id, tipo_login, timedelta(minutes=3))
+    print(refresh_token)
 
     return {
         "access_token" : access_token,
@@ -69,9 +73,18 @@ async def login(dados_login:OAuth2PasswordRequestForm = Depends(), tipo_login:Op
     }
 
 
-#Endpoint para a criação de um no access_token a partir do refresh_token
+#Endpoint para a criação de um no access_token a partir do refresh_token UTILIZA O REFRESH TOKEN
 @auth_router.post("/refresh")
-async def create_access_token(dict_info : Agente | UBS = Depends(token_verification)):
+async def create_access_token(refresh_token : str):
+    if SECRET_KEY and ALGORITHM:
+            try:
+                dict_info = jwt.decode(refresh_token, SECRET_KEY, ALGORITHM)
+    
+            except JWTError as e:
+                raise HTTPException(status_code=401, detail=f"Erro ao validar token: {e}")
+            
+
+    print("Refresh token válido!")
     
     if dict_info.get("tipo") == "ACS/ACE":
         access_token = create_jwt(dict_info.get("sub"), "ACS/ACE")
