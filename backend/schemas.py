@@ -1,5 +1,6 @@
 from pydantic import BaseModel
-from typing import Optional
+from typing import Optional, List
+from fastapi import UploadFile
 import datetime
 
 #Schema dos Agentes ACS/ACE
@@ -32,7 +33,6 @@ class NotificacaoSchema(BaseModel):
     data_envio : datetime.datetime
     pessoas_animais_infectados_afetados : int
     local_ocorrencia : str
-    meio_identificacao : str
     continuidade_situacao : str
     descricao : str
     status : str

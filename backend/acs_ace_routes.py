@@ -1,12 +1,22 @@
-from fastapi import APIRouter, Depends, HTTPException, UploadFile, File
+from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Form
 from dependencies import create_session, token_verification, somente_Agente, get_usuario
-from schemas import NotificacaoSchema, AgenteSchema
-from models import Agente, UBS, Notificacao
+from models import Agente, UBS, Notificacao, NotificacaoMedia
+from typing import List, Annotated
 from sqlalchemy.orm import Session
 from security import get_hashed_password
 import datetime
-from config import GROK_API_KEY
+from config import GROK_API_KEY, CLOUDINARY_API_KEY, CLOUDINARY_API_SECRET, CLOUDINARY_CLOUD_NAME
 from groq import Groq
+import cloudinary
+import cloudinary.uploader
+
+
+cloudinary.config(
+    cloud_name = CLOUDINARY_CLOUD_NAME,
+    api_key = CLOUDINARY_API_KEY,
+    api_secret = CLOUDINARY_API_SECRET,
+    secure = True
+)
 
 
 acs_ace_router = APIRouter(prefix="/agentes", tags=["Agentes"], dependencies=[Depends(somente_Agente)])
@@ -25,7 +35,7 @@ async def listar_notificacoes(session : Session = Depends(create_session), usuar
 
 #Endpoint para transcrição do áudio enviado pelo agente
 @acs_ace_router.post("/transcricao_audio")
-async def transcricao_audio(audio:UploadFile = File(...)):
+async def transcricao_audio(audio : UploadFile = File(...)):
     if not audio.filename:
         raise HTTPException(status_code=400, detail='Nenhum áudio encontrado.')
     
@@ -47,24 +57,53 @@ async def transcricao_audio(audio:UploadFile = File(...)):
 
 #Criação de uma notificação com base no agente que está logado
 @acs_ace_router.post("/criar_notificacao")
-async def criar_notificacao(notificacao : NotificacaoSchema, session : Session = Depends(create_session), usuario = Depends(get_usuario)):
-    data_hora = datetime.datetime.now()
-    data_hora = data_hora.strftime("%d/%m/%Y %H:%M")
+async def criar_notificacao(nome : str = Form(...), 
+                            tipo_evento : str = Form(...),
+                            categoria : str = Form(...),
+                            pessoas_animais_infectados_afetados : int = Form(...),
+                            local_ocorrencia : str = Form(...),
+                            continuidade_situacao : str = Form(...), 
+                            descricao : str = Form(...),
+                            medias : list[UploadFile] = File(default=[]),
+                            status : str = Form(...),
+                            rascunho : bool = Form(...), 
+                            session : Session = Depends(create_session), usuario = Depends(get_usuario)):
     
-    notificacao_nova = Notificacao(notificacao.nome,
-                              notificacao.tipo_evento,
-                              notificacao.categoria,  
-                              notificacao.data_envio, 
-                              notificacao.pessoas_animais_infectados_afetados, 
-                              notificacao.local_ocorrencia, 
-                              notificacao.meio_identificacao, 
-                              notificacao.continuidade_situacao, 
-                              notificacao.descricao, 
-                              usuario.id, 
-                              notificacao.status, 
-                              notificacao.rascunho)
+    data_envio = datetime.datetime.now()
+
+    notificacao_nova = Notificacao(nome=nome,
+                              tipo_evento=tipo_evento,
+                              categoria=categoria,  
+                              data_envio=data_envio, 
+                              pessoas_animais_infectados_afetados=pessoas_animais_infectados_afetados, 
+                              local_ocorrencia=local_ocorrencia,  
+                              continuidade_situacao=continuidade_situacao, 
+                              descricao=descricao, 
+                              acs_ace_id=usuario.id, 
+                              status=status, 
+                              rascunho=rascunho)
     
     session.add(notificacao_nova)
+    session.flush()
+
+    for media in medias:
+            if media.filename:
+                try:
+                    resultado = cloudinary.uploader.upload(media.file)
+    
+                    url_final = resultado.get("secure_url")
+    
+                    media_nova = NotificacaoMedia(
+                        url = url_final,
+                        notificacao_id = notificacao_nova.id
+                    )
+
+                    session.add(media_nova)
+    
+                except Exception as e:
+                    session.rollback()
+                    return {"Erro":f"Falha ao enviar imagem {media.filename}: {str(e)}"}
+
     session.commit()
 
     return {
