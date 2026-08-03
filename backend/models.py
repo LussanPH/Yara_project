@@ -52,11 +52,12 @@ class Notificacao(Base):
     local_ocorrencia = Column("local_ocorrencia", String)
     continuidade_situacao = Column("continuidade_situacao", String)
     descricao = Column("descricao", String)
+    media_urls = Column("media_urls", String)
     acs_ace_id = Column("acs_ace_id", ForeignKey("Agentes.id"))
     status = Column("status", String)
     rascunho = Column("rascunho", Boolean)
 
-    def __init__(self, nome, tipo_evento, categoria, data_envio, pessoas_animais_infectados_afetados, local_ocorrencia, continuidade_situacao, descricao, acs_ace_id, status="EM ANDAMENTO", rascunho=True):
+    def __init__(self, nome, tipo_evento, categoria, data_envio, pessoas_animais_infectados_afetados, local_ocorrencia, continuidade_situacao, descricao, medias, acs_ace_id, status="EM ANDAMENTO", rascunho=True):
         self.nome = nome
         self.tipo_evento = tipo_evento
         self.categoria = categoria
@@ -65,6 +66,7 @@ class Notificacao(Base):
         self.local_ocorrencia = local_ocorrencia
         self.continuidade_situacao = continuidade_situacao
         self.descricao = descricao
+        self.media_urls = medias
         self.acs_ace_id = acs_ace_id
         self.status = status
         self.rascunho = rascunho
