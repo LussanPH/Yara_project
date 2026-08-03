@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Form
 from dependencies import create_session, token_verification, somente_Agente, get_usuario
-from models import Agente, UBS, Notificacao
+from models import Agente, UBS, Notificacao, NotificacaoMedia
 from typing import List, Annotated
 from sqlalchemy.orm import Session
 from security import get_hashed_password
@@ -64,44 +64,46 @@ async def criar_notificacao(nome : str = Form(...),
                             local_ocorrencia : str = Form(...),
                             continuidade_situacao : str = Form(...), 
                             descricao : str = Form(...),
-                            medias : list[UploadFile] = File(...),
+                            medias : list[UploadFile] = File(default=[]),
                             status : str = Form(...),
                             rascunho : bool = Form(...), 
                             session : Session = Depends(create_session), usuario = Depends(get_usuario)):
     
     data_envio = datetime.datetime.now()
 
-    urls_media = []
-
-    for media in medias:
-        if media.filename:
-            try:
-                resultado = cloudinary.uploader.upload(media.file)
-
-                url_final = resultado.get("secure_url")
-
-                urls_media.append(url_final)
-
-            except Exception as e:
-                return {"Erro":f"Falha ao enviar imagem {media.filename}: {str(e)}"}
-
-
-    
-    
-    notificacao_nova = Notificacao(nome,
-                              tipo_evento,
-                              categoria,  
-                              data_envio, 
-                              pessoas_animais_infectados_afetados, 
-                              local_ocorrencia,  
-                              continuidade_situacao, 
-                              descricao, 
-                              urls_media,
-                              usuario.id, 
-                              status, 
-                              rascunho)
+    notificacao_nova = Notificacao(nome=nome,
+                              tipo_evento=tipo_evento,
+                              categoria=categoria,  
+                              data_envio=data_envio, 
+                              pessoas_animais_infectados_afetados=pessoas_animais_infectados_afetados, 
+                              local_ocorrencia=local_ocorrencia,  
+                              continuidade_situacao=continuidade_situacao, 
+                              descricao=descricao, 
+                              acs_ace_id=usuario.id, 
+                              status=status, 
+                              rascunho=rascunho)
     
     session.add(notificacao_nova)
+    session.flush()
+
+    for media in medias:
+            if media.filename:
+                try:
+                    resultado = cloudinary.uploader.upload(media.file)
+    
+                    url_final = resultado.get("secure_url")
+    
+                    media_nova = NotificacaoMedia(
+                        url = url_final,
+                        notificacao_id = notificacao_nova.id
+                    )
+
+                    session.add(media_nova)
+    
+                except Exception as e:
+                    session.rollback()
+                    return {"Erro":f"Falha ao enviar imagem {media.filename}: {str(e)}"}
+
     session.commit()
 
     return {

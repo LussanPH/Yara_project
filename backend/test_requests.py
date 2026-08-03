@@ -29,7 +29,7 @@ def teste_criar_notificação():
     
             arquivos_media = [
                 ("medias", ("comparacao_equalizacao_normal_clahe.png", img1, "image/png")),
-                ("medias", ("Gemini_Generated_Image_hf3vunhf3vunhf3v.png", img1, "image/png"))
+                ("medias", ("Gemini_Generated_Image_hf3vunhf3vunhf3v.png", img2, "image/png"))
             ]
 
             resposta = client.post(
