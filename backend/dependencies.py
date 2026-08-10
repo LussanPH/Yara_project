@@ -20,6 +20,7 @@ def create_session():
 
 #Verificação da validade do jwt
 def token_verification(token:str = Depends(oauth2_schema), session:Session = Depends(create_session)):
+    print("TOKEN RECEBIDO:", token)
     if SECRET_KEY and ALGORITHM:
         try:
             dict_info = jwt.decode(token, SECRET_KEY, ALGORITHM)

@@ -1,59 +1,75 @@
 from fastapi import APIRouter, Depends, HTTPException
-from dependencies import create_session, token_verification, somente_UBS
-from schemas import NotificacaoSchema, AgenteSchema, UBSSchema, DadosUBSSchema
-from models import Agente, UBS, Notificacao, Dados_UBS
 from sqlalchemy.orm import Session
-from security import get_hashed_password
-from sqlalchemy.exc import SQLAlchemyError
+from dependencies import create_session, somente_UBS
+from models import Notificacao, UBS
+from schemas import NotificacaoSchema
 import datetime
 
 ubs_router = APIRouter(prefix="/ubs", tags=["ubs"], dependencies=[Depends(somente_UBS)])
 
+# Listar notificações associadas aos agentes da UBS logada
+@ubs_router.get("/notificacoes")
+async def listar_notificacoes_ubs(session: Session = Depends(create_session)):
+    try:
+        notificacoes = session.query(Notificacao).filter(Notificacao.rascunho == False).all()
+        return {"notificacoes": notificacoes}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Erro ao buscar notificações: {str(e)}")
 
-#Criação de um agente
-@ubs_router.post("/criar_agente")
-async def criar_agente(agente_schema : AgenteSchema, session : Session = Depends(create_session)):
-    agente = session.query(Agente).filter(Agente.email == agente_schema.email).first()
-
-    if agente:
-        raise HTTPException(status_code=400, detail="Agente já cadastrado no sistema!")
+# Validar Notificação
+@ubs_router.patch("/notificacoes/{notificacao_id}/validar")
+async def validar_notificacao(notificacao_id: int, session: Session = Depends(create_session)):
+    notificacao = session.query(Notificacao).filter(Notificacao.id == notificacao_id).first()
+    if not notificacao:
+        raise HTTPException(status_code=404, detail="Notificação não encontrada.")
     
-    senha_hash = get_hashed_password(agente_schema.senha)
-    agente = Agente(senha_hash, agente_schema.cargo, agente_schema.nome, agente_schema.ubs_atuante, agente_schema.email)
-    session.add(agente)
+    notificacao.status = "VALIDADA"
     session.commit()
+    return {"message": "Notificação validada com sucesso!"}
 
+# Encaminhar Notificação
+@ubs_router.patch("/notificacoes/{notificacao_id}/encaminhar")
+async def encaminhar_notificacao(notificacao_id: int, session: Session = Depends(create_session)):
+    notificacao = session.query(Notificacao).filter(Notificacao.id == notificacao_id).first()
+    if not notificacao:
+        raise HTTPException(status_code=404, detail="Notificação não encontrada.")
+    
+    notificacao.status = "ENCAMINHADA"
+    session.commit()
+    return {"message": "Notificação encaminhada com sucesso!"}
+
+# Complementar Notificação
+@ubs_router.patch("/notificacoes/{notificacao_id}/complementar")
+async def complementar_notificacao(notificacao_id: int, informacao_extra: str, session: Session = Depends(create_session)):
+    notificacao = session.query(Notificacao).filter(Notificacao.id == notificacao_id).first()
+    if not notificacao:
+        raise HTTPException(status_code=404, detail="Notificação não encontrada.")
+    
+    notificacao.descricao += f"\n[Complemento UBS]: {informacao_extra}"
+    session.commit()
+    return {"message": "Notificação complementada com sucesso!"}
+
+@ubs_router.get("/notificacoes/{notificacao_id}")
+async def obter_detalhes_notificacao(notificacao_id: int, session: Session = Depends(create_session)):
+    notificacao = session.query(Notificacao).filter(Notificacao.id == notificacao_id).first()
+    
+    if not notificacao:
+        raise HTTPException(status_code=404, detail="Notificação não encontrada.")
+    
+    # Recuperar URLs das mídias vinculadas
+    medias = [media.url for media in notificacao.media_urls]
+    
     return {
-        "response" : f"Email {agente_schema.email} cadastrado com sucesso"
+        "id": notificacao.id,
+        "nome": notificacao.nome,
+        "tipo_evento": notificacao.tipo_evento,
+        "categoria": notificacao.categoria,
+        "data_envio": notificacao.data_envio,
+        "pessoas_animais_infectados_afetados": notificacao.pessoas_animais_infectados_afetados,
+        "local_ocorrencia": notificacao.local_ocorrencia,
+        "continuidade_situacao": notificacao.continuidade_situacao,
+        "descricao": notificacao.descricao,
+        "status": notificacao.status,
+        "acs_ace_id": notificacao.acs_ace_id,
+        "medias": medias
     }
-
-
-#Criação de uma conta UBS
-@ubs_router.post("/criar_conta_ubs")
-async def criar_conta_ubs(ubs_schema : UBSSchema, session : Session = Depends(create_session)):
-    ubs = session.query(UBS).filter(UBS.email == ubs_schema.email).first()
-
-    if ubs:
-        raise HTTPException(status_code=400, detail="Conta UBS já cadastrada no sistema!")
-    
-    senha_hashed = get_hashed_password(ubs_schema.senha)
-    ubs_nova = UBS(senha_hashed, ubs_schema.nome, ubs_schema.ubs, ubs_schema.municipio, ubs_schema.email)
-    session.add(ubs_nova)
-    session.commit()
-    
-    return {"message": "Conta UBS criada com sucesso!"}
-
-
-#Criação de uma UBS
-@ubs_router.post("/criar_ubs")
-async def criar_ubs(dados_ubs_schema : DadosUBSSchema, session: Session = Depends(create_session)):
-    dados_ubs = session.query(Dados_UBS).filter(Dados_UBS.nome == dados_ubs_schema.nome).first()
-
-    if dados_ubs:
-        raise HTTPException(status_code=400, detail=f"Dados da UBS {dados_ubs.nome} já cadastrada no sistema.")
-    
-    dados_ubs_nova = Dados_UBS(dados_ubs_schema.nome, dados_ubs_schema.municipio, dados_ubs_schema.estado)
-    session.add(dados_ubs_nova)
-    session.commit()
-
-    return {'message':f'Dados da UBS {dados_ubs_nova.nome} cadastrados com sucesso!'}
