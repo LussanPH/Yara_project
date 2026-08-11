@@ -1,4 +1,4 @@
-from sqlalchemy import create_engine, Column, Integer, String, Boolean, ForeignKey, DateTime, MetaData
+from sqlalchemy import create_engine, Column, Integer, String, Float, Boolean, ForeignKey, DateTime, MetaData
 from sqlalchemy.orm import declarative_base, relationship
 
 convention = {
@@ -60,6 +60,12 @@ class Notificacao(Base):
     data_envio = Column("data_envio", DateTime)
     pessoas_animais_infectados_afetados = Column("pessoas_animais_infectados_afetados", Integer)
     local_ocorrencia = Column("local_ocorrencia", String)
+    estado = Column("estado", String, nullable=True)
+    municipio = Column("municipio", String, nullable=True)
+    endereco = Column("endereco", String, nullable=True) 
+    latitude = Column("latitude", Float, nullable=True)
+    longitude = Column("longitude", Float, nullable=True)
+    
     continuidade_situacao = Column("continuidade_situacao", String)
     descricao = Column("descricao", String)
     media_urls = relationship("NotificacaoMedia", back_populates="notificacao")
@@ -67,13 +73,39 @@ class Notificacao(Base):
     status = Column("status", String)
     rascunho = Column("rascunho", Boolean)
 
-    def __init__(self, nome, tipo_evento, categoria, data_envio, pessoas_animais_infectados_afetados, local_ocorrencia, continuidade_situacao, descricao, acs_ace_id, status="EM ANDAMENTO", rascunho=True):
+    def __init__(
+        self,
+        nome,
+        tipo_evento,
+        categoria,
+        data_envio,
+        pessoas_animais_infectados_afetados,
+        local_ocorrencia,
+        continuidade_situacao,
+        descricao,
+        acs_ace_id,
+        status="EM ANDAMENTO",
+        rascunho=True,
+        estado=None,
+        municipio=None,
+        endereco=None,
+        latitude=None,
+        longitude=None
+    ):
         self.nome = nome
         self.tipo_evento = tipo_evento
         self.categoria = categoria
         self.data_envio = data_envio
         self.pessoas_animais_infectados_afetados = pessoas_animais_infectados_afetados
         self.local_ocorrencia = local_ocorrencia
+
+        self.estado = estado
+        self.municipio = municipio
+        self.endereco = endereco
+
+        self.latitude = latitude
+        self.longitude = longitude
+
         self.continuidade_situacao = continuidade_situacao
         self.descricao = descricao
         self.acs_ace_id = acs_ace_id

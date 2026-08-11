@@ -48,28 +48,3 @@ async def complementar_notificacao(notificacao_id: int, informacao_extra: str, s
     notificacao.descricao += f"\n[Complemento UBS]: {informacao_extra}"
     session.commit()
     return {"message": "Notificação complementada com sucesso!"}
-
-@ubs_router.get("/notificacoes/{notificacao_id}")
-async def obter_detalhes_notificacao(notificacao_id: int, session: Session = Depends(create_session)):
-    notificacao = session.query(Notificacao).filter(Notificacao.id == notificacao_id).first()
-    
-    if not notificacao:
-        raise HTTPException(status_code=404, detail="Notificação não encontrada.")
-    
-    # Recuperar URLs das mídias vinculadas
-    medias = [media.url for media in notificacao.media_urls]
-    
-    return {
-        "id": notificacao.id,
-        "nome": notificacao.nome,
-        "tipo_evento": notificacao.tipo_evento,
-        "categoria": notificacao.categoria,
-        "data_envio": notificacao.data_envio,
-        "pessoas_animais_infectados_afetados": notificacao.pessoas_animais_infectados_afetados,
-        "local_ocorrencia": notificacao.local_ocorrencia,
-        "continuidade_situacao": notificacao.continuidade_situacao,
-        "descricao": notificacao.descricao,
-        "status": notificacao.status,
-        "acs_ace_id": notificacao.acs_ace_id,
-        "medias": medias
-    }
