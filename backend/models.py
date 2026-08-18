@@ -50,6 +50,22 @@ class UBS(Base):
         self.email = email
 
 
+class Coordenador_Municipal(Base):
+    __tablename__ = "Coordenadores"
+
+    id = Column("id", Integer, primary_key=True, autoincrement=True)
+    email = Column("email", String)
+    senha = Column("senha", String)
+    nome = Column("nome", String)
+    municipio = Column("municipio", String)
+
+    def __init__(self, email, senha, nome, municipio):
+        self.email = email
+        self.senha = senha
+        self.nome = nome
+        self.municipio = municipio
+
+
 class Notificacao(Base):
     __tablename__ = "Notificaçoes"
 
@@ -72,6 +88,7 @@ class Notificacao(Base):
     acs_ace_id = Column("acs_ace_id", ForeignKey("Agentes.id"))
     status = Column("status", String)
     rascunho = Column("rascunho", Boolean)
+    validado = Column("validado", Boolean)
 
     def __init__(
         self,
@@ -85,6 +102,7 @@ class Notificacao(Base):
         descricao,
         acs_ace_id,
         status="EM ANDAMENTO",
+        validado = False,           #ADICIONADO O CAMPO VALIDADO
         rascunho=True,
         estado=None,
         municipio=None,
@@ -111,6 +129,7 @@ class Notificacao(Base):
         self.acs_ace_id = acs_ace_id
         self.status = status
         self.rascunho = rascunho
+        self.validado = validado            #ADICIONADO O CAMPO VALIDADO
 
 
 class NotificacaoMedia(Base):

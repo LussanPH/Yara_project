@@ -108,8 +108,7 @@ async def criar_notificacao(
     municipio : str = Form(None), 
     continuidade_situacao : str = Form(...), 
     descricao : str = Form(...),
-    medias : list[UploadFile] = File(default=[]),
-    status : str = Form(...),
+    medias : list[UploadFile] = File(default=[]),  #RETIRADO STATUS DO FORMULÁRIO
     rascunho : bool = Form(...), 
     session : Session = Depends(create_session), 
     usuario = Depends(get_usuario)
@@ -143,8 +142,9 @@ async def criar_notificacao(
         continuidade_situacao=continuidade_situacao,
         descricao=descricao,
         acs_ace_id=usuario.id,
-        status=status,
-        rascunho=rascunho
+        status="EM ANDAMENTO",             #CAMPO STATUS COMO EM ANDAMENTO POR PADRÃO
+        rascunho=rascunho,
+        validado=False              #ADICONADO O CAMPO VALIDADO COMO FALSE
     )
     
     session.add(notificacao_nova)

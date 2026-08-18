@@ -3,7 +3,7 @@ from fastapi.security import OAuth2PasswordRequestForm
 from dependencies import create_session, token_verification
 from sqlalchemy.orm import Session
 from typing import Optional
-from models import Agente, UBS
+from models import Agente, UBS, Coordenador_Municipal
 from security import verify_password
 from datetime import timedelta, datetime, timezone
 from config import ACCESS_TOKEN_EXPIRATE_MINUTES, ALGORITHM, SECRET_KEY
@@ -29,6 +29,8 @@ def login_auth(email, senha, tipo, session:Session):
         usuario = session.query(Agente).filter(Agente.email == email).first()
     elif tipo == "UBS":
         usuario = session.query(UBS).filter(UBS.email == email).first()
+    elif tipo == "CM":
+        usuario = session.query(Coordenador_Municipal).filter(Coordenador_Municipal.email == email).first()
     else:
         return False
 
@@ -53,6 +55,10 @@ async def login(
     tipo_login: Optional[str] = Form(None),
     session: Session = Depends(create_session)
 ):
+
+    if tipo_login == None:
+        tipo_login = dados_login.client_id
+
     usuario = login_auth(dados_login.username, dados_login.password, tipo_login, session)
 
     if not usuario:
@@ -68,7 +74,7 @@ async def login(
         "email": usuario.email,
     }
 
-    if tipo_login == "ACS/ACE":
+    if tipo_login == "ACS/ACE" or tipo_login == "CM":
         dados_usuario["cargo"] = usuario.cargo
 
     elif tipo_login == "UBS":

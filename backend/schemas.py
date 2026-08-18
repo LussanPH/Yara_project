@@ -49,4 +49,15 @@ class DadosUBSSchema(BaseModel):
 
     class Config:
         from_attributes = True
+
+
+#Schema dos dados do Coordenador Municipal
+class CMSchema(BaseModel):
+    nome: str
+    email: str
+    senha: str
+    municipio: str
+
+    class Config:
+        from_attributes = True
     
