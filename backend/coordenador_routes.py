@@ -101,5 +101,45 @@ async def validar_notificacao(notificacao_id: int, usuario = Depends(get_usuario
 
     return {"message":"Notificação encerrada!"}
 
+# Adicionar em cm_router.py
 
+# Métricas resumidas do município
+@cm_router.get("/dashboard_stats")
+async def obter_estatisticas(usuario = Depends(get_usuario), session: Session = Depends(create_session)):
+    try:
+        total = session.query(Notificacao).filter(Notificacao.municipio == usuario.municipio, Notificacao.validado == True).count()
+        investigacao = session.query(Notificacao).filter(Notificacao.municipio == usuario.municipio, Notificacao.validado == True, Notificacao.status == "EM INVESTIGAÇÃO").count()
+        confirmados = session.query(Notificacao).filter(Notificacao.municipio == usuario.municipio, Notificacao.validado == True, Notificacao.status == "CONFIRMADO").count()
+        
+        return {
+            "total": total,
+            "em_investigacao": investigacao,
+            "confirmados": confirmados
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Erro ao carregar estatísticas: {str(e)}")
+
+@cm_router.get("/exportar_relatorio")
+async def exportar_relatorio(usuario = Depends(get_usuario), session: Session = Depends(create_session)):
+    try:
+        notificacoes = session.query(Notificacao).filter(
+            Notificacao.municipio == usuario.municipio, 
+            Notificacao.validado == True
+        ).all()
+        
+        relatorio = [
+            {
+                "id": n.id,
+                "categoria": getattr(n, 'categoria', 'N/A'),
+                "tipo": getattr(n, 'tipo', 'N/A'),
+                "status": n.status,
+                "data": getattr(n, 'data_criacao', 'N/A'),
+                "local": getattr(n, 'local', 'N/A')
+            }
+            for n in notificacoes
+        ]
+        
+        return {"relatorio": relatorio, "municipio": usuario.municipio}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Erro ao gerar relatório: {str(e)}")
 
