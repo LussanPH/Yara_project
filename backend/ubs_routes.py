@@ -10,7 +10,7 @@ ubs_router = APIRouter(prefix="/ubs", tags=["ubs"], dependencies=[Depends(soment
 
 
 #Criação de conta ubs
-@ubs_router.post("/criar_conta")
+@ubs_router.post("/criar_conta_ubs")
 async def criar_ubs(ubs_schema : UBSSchema, session : Session = Depends(create_session)): 
     ubs = session.query(UBS).filter(UBS.email == ubs_schema.email).first()
 
@@ -26,18 +26,19 @@ async def criar_ubs(ubs_schema : UBSSchema, session : Session = Depends(create_s
 
 
 #Criação de conta acs/ace
-async def criar_ubs(agente_schema : AgenteSchema, session : Session = Depends(create_session)): 
+@ubs_router.post("/criar_conta_acs_ace")
+async def criar_acs_ace(agente_schema : AgenteSchema, session : Session = Depends(create_session)): 
     acs_ace = session.query(Agente).filter(Agente.email == agente_schema.email).first()
 
     if acs_ace:
         raise HTTPException(status_code=400, detail="UBS já cadastrada no sistema!")
     
-    senha_hashed = get_hashed_password(acs_ace.senha)
-    acs_ace_novo = Agente(senha_hashed, acs_ace.cargo, acs_ace.nome, acs_ace.ubs_atuante)
+    senha_hashed = get_hashed_password(agente_schema.senha)
+    acs_ace_novo = Agente(senha_hashed, agente_schema.cargo, agente_schema.nome, agente_schema.ubs_atuante, agente_schema.email)
     session.add(acs_ace_novo)
     session.commit()
     
-    return {"message": f"Agente {acs_ace_novo.cargo} criada com sucesso!"}
+    return {"message": f"Conta agente {acs_ace_novo.cargo} criada com sucesso!"}
 
 
 # Listar notificações associadas aos agentes da UBS logada
