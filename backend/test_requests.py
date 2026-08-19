@@ -41,6 +41,8 @@ def teste_criar_notificação():
 
     assert resposta.status_code == 200
 
+teste_criar_notificação()
+
 
 
 
