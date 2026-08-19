@@ -43,13 +43,51 @@ async def criar_acs_ace(agente_schema : AgenteSchema, session : Session = Depend
 
 # Listar notificações associadas aos agentes da UBS logada
 @ubs_router.get("/notificacoes")
-async def listar_notificacoes_ubs(usuario = Depends(get_usuario), session : Session = Depends(create_session)):
+async def listar_notificacoes_ubs(
+    usuario=Depends(get_usuario),
+    session: Session = Depends(create_session)
+):
     try:
-        notificacoes = session.query(Notificacao).join(Agente, Notificacao.acs_ace_id == Agente.id).filter(Agente.ubs_atuante == usuario.ubs, Notificacao.rascunho == False).all()      #RETORNA AS NOTIFICAÇÕES DOS AGENTES RELACIONADOS COM OP USUÁRIO UBS QUE NÃO SÃO RASCUNHO
+        resultados = (
+            session.query(Notificacao, Agente)
+            .join(
+                Agente,
+                Notificacao.acs_ace_id == Agente.id
+            )
+            .filter(
+                Agente.ubs_atuante == usuario.ubs,
+                Notificacao.rascunho == False
+            )
+            .all()
+        )
+
+        notificacoes = []
+
+        for notificacao, agente in resultados:
+            notificacoes.append({
+                "id": notificacao.id,
+                "nome": notificacao.nome,
+                "tipo_evento": notificacao.tipo_evento,
+                "categoria": notificacao.categoria,
+                "data_envio": notificacao.data_envio,
+                "pessoas_animais_infectados_afetados":
+                    notificacao.pessoas_animais_infectados_afetados,
+                "local_ocorrencia": notificacao.local_ocorrencia,
+                "continuidade_situacao": notificacao.continuidade_situacao,
+                "descricao": notificacao.descricao,
+                "acs_ace_id": notificacao.acs_ace_id,
+                "acs_ace_nome": agente.nome,
+                "status": notificacao.status,
+                "rascunho": notificacao.rascunho,
+            })
 
         return {"notificacoes": notificacoes}
+
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Erro ao buscar notificações: {str(e)}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Erro ao buscar notificações: {str(e)}"
+        )
 
 
 #Valida Notificação
