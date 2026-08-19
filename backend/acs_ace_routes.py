@@ -150,7 +150,24 @@ async def criar_notificacao(
     session.add(notificacao_nova)
     session.flush()
     
-    # (resto da lógica do upload de imagens permanece igual...)
+    for media in medias:
+            if media.filename:
+                try:
+                    resultado = cloudinary.uploader.upload(media.file)
+    
+                    url_final = resultado.get("secure_url")
+    
+                    media_nova = NotificacaoMedia(
+                        url = url_final,
+                        notificacao_id = notificacao_nova.id
+                    )
+
+                    session.add(media_nova)
+    
+                except Exception as e:
+                    session.rollback()
+                    return {"Erro":f"Falha ao enviar imagem {media.filename}: {str(e)}"}
+                
     session.commit()
 
     return {"response": f"Notificação {notificacao_nova.nome} criada com sucesso!"}
