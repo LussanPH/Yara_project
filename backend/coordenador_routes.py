@@ -26,13 +26,13 @@ cm_router = APIRouter(prefix="/cm", tags=["cm"], dependencies=[Depends(somente_C
 #Criaçaõ de conta CM
 @cm_router.post("/criar_conta")
 async def criar_cm(cm_schema : CMSchema, session : Session = Depends(create_session)): 
-    cm = session.query(Coordenador_Municipal).filter(Coordenador_Municipal.email == cm_schema.email).first()
+    cm = session.query(Coordenador_Municipal).filter(Coordenador_Municipal.cpf == cm_schema.cpf).first()
 
     if cm:
         raise HTTPException(status_code=400, detail="UBS já cadastrada no sistema!")
     
     senha_hashed = get_hashed_password(cm_schema.senha)
-    cm_novo = Coordenador_Municipal(cm_schema.email, senha_hashed, cm_schema.nome, cm_schema.municipio)
+    cm_novo = Coordenador_Municipal(cm_schema.cpf, senha_hashed, cm_schema.nome, cm_schema.municipio)
     session.add(cm_novo)
     session.commit()
     
@@ -43,7 +43,7 @@ async def criar_cm(cm_schema : CMSchema, session : Session = Depends(create_sess
 @cm_router.get("/listar_notificacoes")
 async def listar_notificacoes_ubs(usuario = Depends(get_usuario), session : Session = Depends(create_session)):
     try:
-        notificacoes = session.query(Notificacao).filter(Notificacao.municipio == usuario.municipio, Notificacao.validado == True).all()      #RETORNA TODAS AS NOTIFICAÇÕOS DA REGIÃO QUE FORAM VALIDADAS
+        notificacoes = session.query(Notificacao).filter(Notificacao.municipio == usuario.municipio).all()      #RETORNA TODAS AS NOTIFICAÇÕOS DA REGIÃO QUE FORAM VALIDADAS
 
         return {"notificacoes": notificacoes, "quantidade": len(notificacoes)}
     
@@ -54,7 +54,7 @@ async def listar_notificacoes_ubs(usuario = Depends(get_usuario), session : Sess
 #Alteração dos status de uma notificação
 @cm_router.patch("/notificacoes/{notificacao_id}/status_recebido")
 async def validar_notificacao(notificacao_id: int, usuario = Depends(get_usuario), session: Session = Depends(create_session)):
-    notificacao = session.query(Notificacao).filter(Notificacao.id == notificacao_id, Notificacao.municipio == usuario.municipio, Notificacao.validado == True).first()
+    notificacao = session.query(Notificacao).filter(Notificacao.id == notificacao_id, Notificacao.municipio == usuario.municipio).first()
 
     if not notificacao:
         raise HTTPException(status_code=404, detail="Notificação não encontrada.")
@@ -67,7 +67,7 @@ async def validar_notificacao(notificacao_id: int, usuario = Depends(get_usuario
 
 @cm_router.patch("/notificacoes/{notificacao_id}/status_em_investigacao")
 async def validar_notificacao(notificacao_id: int, usuario = Depends(get_usuario), session: Session = Depends(create_session)):
-    notificacao = session.query(Notificacao).filter(Notificacao.id == notificacao_id, Notificacao.municipio == usuario.municipio, Notificacao.validado == True).first()
+    notificacao = session.query(Notificacao).filter(Notificacao.id == notificacao_id, Notificacao.municipio == usuario.municipio).first()
 
     if not notificacao:
         raise HTTPException(status_code=404, detail="Notificação não encontrada.")
@@ -80,7 +80,7 @@ async def validar_notificacao(notificacao_id: int, usuario = Depends(get_usuario
 
 @cm_router.patch("/notificacoes/{notificacao_id}/status_confirmado")
 async def validar_notificacao(notificacao_id: int, usuario = Depends(get_usuario), session: Session = Depends(create_session)):
-    notificacao = session.query(Notificacao).filter(Notificacao.id == notificacao_id, Notificacao.municipio == usuario.municipio, Notificacao.validado == True).first()
+    notificacao = session.query(Notificacao).filter(Notificacao.id == notificacao_id, Notificacao.municipio == usuario.municipio).first()
 
     if not notificacao:
         raise HTTPException(status_code=404, detail="Notificação não encontrada.")
@@ -93,7 +93,7 @@ async def validar_notificacao(notificacao_id: int, usuario = Depends(get_usuario
 
 @cm_router.patch("/notificacoes/{notificacao_id}/status_descartado")
 async def validar_notificacao(notificacao_id: int, usuario = Depends(get_usuario), session: Session = Depends(create_session)):
-    notificacao = session.query(Notificacao).filter(Notificacao.id == notificacao_id, Notificacao.municipio == usuario.municipio, Notificacao.validado == True).first()
+    notificacao = session.query(Notificacao).filter(Notificacao.id == notificacao_id, Notificacao.municipio == usuario.municipio).first()
 
     if not notificacao:
         raise HTTPException(status_code=404, detail="Notificação não encontrada.")
@@ -106,7 +106,7 @@ async def validar_notificacao(notificacao_id: int, usuario = Depends(get_usuario
 
 @cm_router.patch("/notificacoes/{notificacao_id}/status_encerrado")
 async def validar_notificacao(notificacao_id: int, usuario = Depends(get_usuario), session: Session = Depends(create_session)):
-    notificacao = session.query(Notificacao).filter(Notificacao.id == notificacao_id, Notificacao.municipio == usuario.municipio, Notificacao.validado == True).first()
+    notificacao = session.query(Notificacao).filter(Notificacao.id == notificacao_id, Notificacao.municipio == usuario.municipio).first()
 
     if not notificacao:
         raise HTTPException(status_code=404, detail="Notificação não encontrada.")
@@ -122,9 +122,9 @@ async def validar_notificacao(notificacao_id: int, usuario = Depends(get_usuario
 @cm_router.get("/dashboard_stats")
 async def obter_estatisticas(usuario = Depends(get_usuario), session: Session = Depends(create_session)):
     try:
-        total = session.query(Notificacao).filter(Notificacao.municipio == usuario.municipio, Notificacao.validado == True).count()
-        investigacao = session.query(Notificacao).filter(Notificacao.municipio == usuario.municipio, Notificacao.validado == True, Notificacao.status == "EM INVESTIGAÇÃO").count()
-        confirmados = session.query(Notificacao).filter(Notificacao.municipio == usuario.municipio, Notificacao.validado == True, Notificacao.status == "CONFIRMADO").count()
+        total = session.query(Notificacao).filter(Notificacao.municipio == usuario.municipio).count()
+        investigacao = session.query(Notificacao).filter(Notificacao.municipio == usuario.municipio, Notificacao.status == "EM INVESTIGAÇÃO").count()
+        confirmados = session.query(Notificacao).filter(Notificacao.municipio == usuario.municipio, Notificacao.status == "CONFIRMADO").count()
         
         return {
             "total": total,
@@ -138,8 +138,7 @@ async def obter_estatisticas(usuario = Depends(get_usuario), session: Session = 
 async def exportar_relatorio(usuario = Depends(get_usuario), session: Session = Depends(create_session)):
     try:
         notificacoes = session.query(Notificacao).filter(
-            Notificacao.municipio == usuario.municipio, 
-            Notificacao.validado == True
+            Notificacao.municipio == usuario.municipio,
         ).all()
         
         relatorio = [
@@ -168,7 +167,6 @@ async def exportar_relatorio_pdf(
             session.query(Notificacao)
             .filter(
                 Notificacao.municipio == usuario.municipio,
-                Notificacao.validado == True
             )
             .order_by(Notificacao.data_envio.desc())
             .all()
@@ -340,7 +338,6 @@ async def gerar_relatorio_notificacao_pdf(
         notificacao = session.query(Notificacao).filter(
             Notificacao.id == notificacao_id,
             Notificacao.municipio == usuario.municipio,
-            Notificacao.validado == True
         ).first()
 
         if not notificacao:

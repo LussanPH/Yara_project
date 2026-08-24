@@ -5,7 +5,7 @@ client = TestClient(app)
 
 def teste_criar_notificação():
     resposta_login = client.post(
-        "/auth/login", data={'username':'pedro@gmail.com', 'password':'123456', 'tipo_login':'ACS/ACE'}
+        "/auth/login", data={'username':'12345678910', 'password':'123456', 'tipo_login':'ACS/ACE'}
     )
 
     token_valido = resposta_login.json()['access_token']
