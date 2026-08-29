@@ -25,12 +25,13 @@ class Agente(Base):
     microarea = Column("microarea", String)
     cpf = Column("cpf", String)
 
-    def __init__(self, senha, cargo, nome, ubs_atuante, cpf):
+    def __init__(self, senha, cargo, nome, ubs_atuante, cpf, microarea):
         self.senha = senha
         self.cargo = cargo
         self.nome = nome
         self.ubs_atuante = ubs_atuante
         self.cpf = cpf
+        self.microarea = microarea
 
 
 class UBS(Base): 

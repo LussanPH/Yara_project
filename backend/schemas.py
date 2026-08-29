@@ -10,6 +10,7 @@ class AgenteSchema(BaseModel):
     nome : str
     ubs_atuante : int
     cpf : str
+    microarea : str
 
     class Config:
         from_attributes = True

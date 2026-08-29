@@ -6,7 +6,7 @@ from models import Notificacao, UBS, Agente, Dados_UBS
 from schemas import NotificacaoSchema, UBSSchema, AgenteSchema
 import datetime
 
-ubs_router = APIRouter(prefix="/ubs", tags=["ubs"])
+ubs_router = APIRouter(prefix="/ubs", tags=["ubs"], dependencies=[Depends(somente_UBS)])
 
 
 #Criação de conta ubs
@@ -34,7 +34,7 @@ async def criar_acs_ace(agente_schema : AgenteSchema, session : Session = Depend
         raise HTTPException(status_code=400, detail="UBS já cadastrada no sistema!")
     
     senha_hashed = get_hashed_password(agente_schema.senha)
-    acs_ace_novo = Agente(senha_hashed, agente_schema.cargo, agente_schema.nome, agente_schema.ubs_atuante, agente_schema.cpf)
+    acs_ace_novo = Agente(senha_hashed, agente_schema.cargo, agente_schema.nome, agente_schema.ubs_atuante, agente_schema.cpf, agente_schema.microarea)
     session.add(acs_ace_novo)
     session.commit()
     
