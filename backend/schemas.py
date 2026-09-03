@@ -9,7 +9,8 @@ class AgenteSchema(BaseModel):
     cargo : str
     nome : str
     ubs_atuante : int
-    email : str
+    cpf : str
+    microarea : str
 
     class Config:
         from_attributes = True
@@ -20,7 +21,7 @@ class UBSSchema(BaseModel):
     ubs : int
     nome : str
     municipio : str
-    email : str
+    cpf : str
     
     class Config:
         from_attributes = True
@@ -54,7 +55,7 @@ class DadosUBSSchema(BaseModel):
 #Schema dos dados do Coordenador Municipal
 class CMSchema(BaseModel):
     nome: str
-    email: str
+    cpf: str
     senha: str
     municipio: str
 

@@ -144,7 +144,7 @@ async def criar_notificacao(
         acs_ace_id=usuario.id,
         status="EM ANDAMENTO",             #CAMPO STATUS COMO EM ANDAMENTO POR PADRÃO
         rascunho=rascunho,
-        validado=False              #ADICONADO O CAMPO VALIDADO COMO FALSE
+        verificada=False              #ADICONADO O CAMPO VALIDADO COMO FALSE
     )
     
     session.add(notificacao_nova)

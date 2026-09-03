@@ -22,14 +22,16 @@ class Agente(Base):
     cargo = Column("cargo", String)
     nome = Column("nome", String)
     ubs_atuante = Column("ubs_atuante", ForeignKey("Dados_UBS.id"))
-    email = Column("email", String)
+    microarea = Column("microarea", String)
+    cpf = Column("cpf", String)
 
-    def __init__(self, senha, cargo, nome, ubs_atuante, email):
+    def __init__(self, senha, cargo, nome, ubs_atuante, cpf, microarea):
         self.senha = senha
         self.cargo = cargo
         self.nome = nome
         self.ubs_atuante = ubs_atuante
-        self.email = email
+        self.cpf = cpf
+        self.microarea = microarea
 
 
 class UBS(Base): 
@@ -40,27 +42,27 @@ class UBS(Base):
     nome = Column("nome", String)
     ubs = Column("ubs", ForeignKey("Dados_UBS.id"))
     municipio = Column("municipio", ForeignKey("Dados_UBS.municipio"))
-    email = Column("email", String)
+    cpf = Column("cpf", String)
 
-    def __init__(self, senha, nome, ubs, municipio, email):
+    def __init__(self, senha, nome, ubs, municipio, cpf):
         self.senha = senha
         self.nome = nome
         self.ubs = ubs
         self.municipio = municipio
-        self.email = email
+        self.cpf = cpf
 
 
 class Coordenador_Municipal(Base):
     __tablename__ = "Coordenadores"
 
     id = Column("id", Integer, primary_key=True, autoincrement=True)
-    email = Column("email", String)
+    cpf = Column("cpf", String)
     senha = Column("senha", String)
     nome = Column("nome", String)
     municipio = Column("municipio", String)
 
-    def __init__(self, email, senha, nome, municipio):
-        self.email = email
+    def __init__(self, cpf, senha, nome, municipio):
+        self.cpf = cpf
         self.senha = senha
         self.nome = nome
         self.municipio = municipio
@@ -88,7 +90,7 @@ class Notificacao(Base):
     acs_ace_id = Column("acs_ace_id", ForeignKey("Agentes.id"))
     status = Column("status", String)
     rascunho = Column("rascunho", Boolean)
-    validado = Column("validado", Boolean)
+    verificada = Column("verificada", Boolean)
 
     def __init__(
         self,
@@ -102,7 +104,7 @@ class Notificacao(Base):
         descricao,
         acs_ace_id,
         status="EM ANDAMENTO",
-        validado = False,           #ADICIONADO O CAMPO VALIDADO
+        verificada = False,           #ADICIONADO O CAMPO VALIDADO
         rascunho=True,
         estado=None,
         municipio=None,
@@ -129,7 +131,7 @@ class Notificacao(Base):
         self.acs_ace_id = acs_ace_id
         self.status = status
         self.rascunho = rascunho
-        self.validado = validado            #ADICIONADO O CAMPO VALIDADO
+        self.verificada = verificada            #ADICIONADO O CAMPO VALIDADO
 
 
 class NotificacaoMedia(Base):

@@ -12,13 +12,13 @@ ubs_router = APIRouter(prefix="/ubs", tags=["ubs"], dependencies=[Depends(soment
 #Criação de conta ubs
 @ubs_router.post("/criar_conta_ubs")
 async def criar_ubs(ubs_schema : UBSSchema, session : Session = Depends(create_session)): 
-    ubs = session.query(UBS).filter(UBS.email == ubs_schema.email).first()
+    ubs = session.query(UBS).filter(UBS.cpf == ubs_schema.cpf).first()
 
     if ubs:
         raise HTTPException(status_code=400, detail="UBS já cadastrada no sistema!")
     
     senha_hashed = get_hashed_password(ubs_schema.senha)
-    ubs_nova = UBS(senha_hashed, ubs_schema.nome, ubs_schema.ubs, ubs_schema.municipio, ubs_schema.email)
+    ubs_nova = UBS(senha_hashed, ubs_schema.nome, ubs_schema.ubs, ubs_schema.municipio, ubs_schema.cpf)
     session.add(ubs_nova)
     session.commit()
     
@@ -28,13 +28,13 @@ async def criar_ubs(ubs_schema : UBSSchema, session : Session = Depends(create_s
 #Criação de conta acs/ace
 @ubs_router.post("/criar_conta_acs_ace")
 async def criar_acs_ace(agente_schema : AgenteSchema, session : Session = Depends(create_session)): 
-    acs_ace = session.query(Agente).filter(Agente.email == agente_schema.email).first()
+    acs_ace = session.query(Agente).filter(Agente.cpf == agente_schema.cpf).first()
 
     if acs_ace:
         raise HTTPException(status_code=400, detail="UBS já cadastrada no sistema!")
     
     senha_hashed = get_hashed_password(agente_schema.senha)
-    acs_ace_novo = Agente(senha_hashed, agente_schema.cargo, agente_schema.nome, agente_schema.ubs_atuante, agente_schema.email)
+    acs_ace_novo = Agente(senha_hashed, agente_schema.cargo, agente_schema.nome, agente_schema.ubs_atuante, agente_schema.cpf, agente_schema.microarea)
     session.add(acs_ace_novo)
     session.commit()
     
@@ -98,10 +98,10 @@ async def validar_notificacao(notificacao_id: int, usuario = Depends(get_usuario
     if not notificacao:
         raise HTTPException(status_code=404, detail="Notificação não encontrada.")
 
-    notificacao.validado = True
+    notificacao.verificada = True
     session.commit()
 
-    return {"message":f"Notificação {notificacao_id} validada com sucesso!"}
+    return {"message":f"Notificação {notificacao_id} verificada com sucesso!"}
 
 
 # Complementar Notificação

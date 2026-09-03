@@ -24,13 +24,13 @@ def create_jwt(id_usuario, tipo, duracao_token = timedelta(minutes=ACCESS_TOKEN_
     return jwt_codificado
 
 #Verifica se o login efetuado corresponde a um usuário do banco de dados correspondente ao seu respectivo tipo
-def login_auth(email, senha, tipo, session:Session):
+def login_auth(cpf, senha, tipo, session:Session):
     if tipo == "ACS/ACE":
-        usuario = session.query(Agente).filter(Agente.email == email).first()
+        usuario = session.query(Agente).filter(Agente.cpf == cpf).first()
     elif tipo == "UBS":
-        usuario = session.query(UBS).filter(UBS.email == email).first()
+        usuario = session.query(UBS).filter(UBS.cpf == cpf).first()
     elif tipo == "CM":
-        usuario = session.query(Coordenador_Municipal).filter(Coordenador_Municipal.email == email).first()
+        usuario = session.query(Coordenador_Municipal).filter(Coordenador_Municipal.cpf == cpf).first()
     else:
         return False
 
@@ -69,7 +69,7 @@ async def login(
     dados_usuario = {
         "id":    usuario.id,
         "nome":  usuario.nome,
-        "email": usuario.email,
+        "cpf": usuario.cpf,
     }
 
     if tipo_login == "ACS/ACE":
