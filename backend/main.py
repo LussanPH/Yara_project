@@ -17,10 +17,10 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-from acs_ace_routes import acs_ace_router
-from ubs_routes import ubs_router
-from auth_routes import auth_router
-from coordenador_routes import cm_router
+from routes.acs_ace_routes import acs_ace_router
+from routes.ubs_routes import ubs_router
+from routes.auth_routes import auth_router
+from routes.coordenador_routes import cm_router
 
 app.include_router(acs_ace_router)
 app.include_router(ubs_router)

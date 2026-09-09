@@ -29,7 +29,7 @@ async def criar_cm(cm_schema : CMSchema, session : Session = Depends(create_sess
     cm = session.query(Coordenador_Municipal).filter(Coordenador_Municipal.cpf == cm_schema.cpf).first()
 
     if cm:
-        raise HTTPException(status_code=400, detail="UBS já cadastrada no sistema!")
+        raise HTTPException(status_code=400, detail="Coordenador já cadastrado no sistema!")
     
     senha_hashed = get_hashed_password(cm_schema.senha)
     cm_novo = Coordenador_Municipal(cm_schema.cpf, senha_hashed, cm_schema.nome, cm_schema.municipio)
@@ -43,7 +43,7 @@ async def criar_cm(cm_schema : CMSchema, session : Session = Depends(create_sess
 @cm_router.get("/listar_notificacoes")
 async def listar_notificacoes_ubs(usuario = Depends(get_usuario), session : Session = Depends(create_session)):
     try:
-        notificacoes = session.query(Notificacao).filter(Notificacao.municipio == usuario.municipio).all()      #RETORNA TODAS AS NOTIFICAÇÕOS DA REGIÃO QUE FORAM VALIDADAS
+        notificacoes = session.query(Notificacao).filter(Notificacao.municipio == usuario.municipio, Notificacao.rascunho == False).all() 
 
         return {"notificacoes": notificacoes, "quantidade": len(notificacoes)}
     
@@ -53,7 +53,7 @@ async def listar_notificacoes_ubs(usuario = Depends(get_usuario), session : Sess
 
 #Alteração dos status de uma notificação
 @cm_router.patch("/notificacoes/{notificacao_id}/status_recebido")
-async def validar_notificacao(notificacao_id: int, usuario = Depends(get_usuario), session: Session = Depends(create_session)):
+async def status_recebido(notificacao_id: int, usuario = Depends(get_usuario), session: Session = Depends(create_session)):
     notificacao = session.query(Notificacao).filter(Notificacao.id == notificacao_id, Notificacao.municipio == usuario.municipio).first()
 
     if not notificacao:
@@ -66,7 +66,7 @@ async def validar_notificacao(notificacao_id: int, usuario = Depends(get_usuario
 
 
 @cm_router.patch("/notificacoes/{notificacao_id}/status_em_investigacao")
-async def validar_notificacao(notificacao_id: int, usuario = Depends(get_usuario), session: Session = Depends(create_session)):
+async def status_em_investigacao(notificacao_id: int, usuario = Depends(get_usuario), session: Session = Depends(create_session)):
     notificacao = session.query(Notificacao).filter(Notificacao.id == notificacao_id, Notificacao.municipio == usuario.municipio).first()
 
     if not notificacao:
@@ -79,7 +79,7 @@ async def validar_notificacao(notificacao_id: int, usuario = Depends(get_usuario
 
 
 @cm_router.patch("/notificacoes/{notificacao_id}/status_confirmado")
-async def validar_notificacao(notificacao_id: int, usuario = Depends(get_usuario), session: Session = Depends(create_session)):
+async def status_confirmado(notificacao_id: int, usuario = Depends(get_usuario), session: Session = Depends(create_session)):
     notificacao = session.query(Notificacao).filter(Notificacao.id == notificacao_id, Notificacao.municipio == usuario.municipio).first()
 
     if not notificacao:
@@ -92,7 +92,7 @@ async def validar_notificacao(notificacao_id: int, usuario = Depends(get_usuario
 
 
 @cm_router.patch("/notificacoes/{notificacao_id}/status_descartado")
-async def validar_notificacao(notificacao_id: int, usuario = Depends(get_usuario), session: Session = Depends(create_session)):
+async def status_descartado(notificacao_id: int, usuario = Depends(get_usuario), session: Session = Depends(create_session)):
     notificacao = session.query(Notificacao).filter(Notificacao.id == notificacao_id, Notificacao.municipio == usuario.municipio).first()
 
     if not notificacao:
@@ -105,7 +105,7 @@ async def validar_notificacao(notificacao_id: int, usuario = Depends(get_usuario
 
 
 @cm_router.patch("/notificacoes/{notificacao_id}/status_encerrado")
-async def validar_notificacao(notificacao_id: int, usuario = Depends(get_usuario), session: Session = Depends(create_session)):
+async def status_encerrado(notificacao_id: int, usuario = Depends(get_usuario), session: Session = Depends(create_session)):
     notificacao = session.query(Notificacao).filter(Notificacao.id == notificacao_id, Notificacao.municipio == usuario.municipio).first()
 
     if not notificacao:
