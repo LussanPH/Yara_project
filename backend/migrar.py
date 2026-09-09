@@ -23,6 +23,9 @@ try:
     # Depois apaga todas as notificações
     #cursor.execute('DELETE FROM "Notificaçoes"')
 
+    cursor.execute('INSERT INTO "Superintendencias_Ceara" (nome, municipio) VALUES (?, ?)',
+                    ('Grande Fortaleza', 'Fortaleza'))
+
     conn.commit()
 
 except Exception as e:
