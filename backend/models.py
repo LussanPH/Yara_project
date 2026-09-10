@@ -1,4 +1,4 @@
-from sqlalchemy import create_engine, Column, Integer, String, Float, Boolean, ForeignKey, DateTime, MetaData
+from sqlalchemy import create_engine, Column, Integer, String, Float, Boolean, ForeignKey, DateTime, MetaData, JSON
 from sqlalchemy.orm import declarative_base, relationship
 
 convention = {
@@ -167,7 +167,7 @@ class Superintendencias_Ceara(Base):
 
     id = Column("id", Integer, primary_key=True, autoincrement=True)
     nome = Column("nome", String, nullable=False)
-    municipio = Column("municipio", String, nullable=False)
+    municipio = Column("municipio", JSON, nullable=False, default=list)
 
     def __init__(self, nome, municipio):
         self.nome = nome

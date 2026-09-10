@@ -1,5 +1,6 @@
 from fastapi import APIRouter, HTTPException, Depends
 from sqlalchemy.orm import Session
+from sqlalchemy import func
 from dependencies import create_session, somente_UBS, get_usuario, somente_VR
 from security import get_hashed_password
 from models import Notificacao, Vigilancia_Regional, Superintendencias_Ceara
@@ -28,12 +29,17 @@ async def criar_vr(vr_schema : VigilanteRegionalSchema, session : Session = Depe
 @vr_router.get('/notificacoes')
 async def listar_notificacoes(usuario = Depends(get_usuario), session : Session = Depends(create_session)):
     try:
-        resultados = (
-            session.query(Notificacao, Superintendencias_Ceara)
-            .join(Superintendencias_Ceara, Notificacao.municipio == Superintendencias_Ceara.municipio)
-            .filter(Superintendencias_Ceara.id == usuario.superintendencia, Notificacao.rascunho == False).all()
-        )
+        municipio_superintendencia = func.json_each(Superintendencias_Ceara.municipio).table_valued("value")
 
+        notificacoes = (
+            session.query(Notificacao)
+            .select_from(Vigilancia_Regional)
+            .join(Superintendencias_Ceara, Vigilancia_Regional.superintendencia == Superintendencias_Ceara.id)
+            .join(municipio_superintendencia, Notificacao.municipio == municipio_superintendencia.c.value)
+            .filter(Vigilancia_Regional.id == usuario.id, Notificacao.rascunho == False)
+            .all()
+        )
+        """
         notificacoes = []
 
         for notificacao, superintendencia in resultados:
@@ -51,7 +57,7 @@ async def listar_notificacoes(usuario = Depends(get_usuario), session : Session 
                 "status": notificacao.status,
                 "rascunho": notificacao.rascunho,
             })
-            
+        """
         return {'notificacoes' : notificacoes}
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Erro ao buscar notificações: {e}")
