@@ -29,7 +29,7 @@ async def criar_cm(cm_schema : CMSchema, session : Session = Depends(create_sess
     cm = session.query(Coordenador_Municipal).filter(Coordenador_Municipal.cpf == cm_schema.cpf).first()
 
     if cm:
-        raise HTTPException(status_code=400, detail="UBS já cadastrada no sistema!")
+        raise HTTPException(status_code=400, detail="Coordenador já cadastrado no sistema!")
     
     senha_hashed = get_hashed_password(cm_schema.senha)
     cm_novo = Coordenador_Municipal(cm_schema.cpf, senha_hashed, cm_schema.nome, cm_schema.municipio)
@@ -43,7 +43,7 @@ async def criar_cm(cm_schema : CMSchema, session : Session = Depends(create_sess
 @cm_router.get("/listar_notificacoes")
 async def listar_notificacoes_ubs(usuario = Depends(get_usuario), session : Session = Depends(create_session)):
     try:
-        notificacoes = session.query(Notificacao).filter(Notificacao.municipio == usuario.municipio).all()      #RETORNA TODAS AS NOTIFICAÇÕOS DA REGIÃO QUE FORAM VALIDADAS
+        notificacoes = session.query(Notificacao).filter(Notificacao.municipio == usuario.municipio, Notificacao.rascunho == False).all() 
 
         return {"notificacoes": notificacoes, "quantidade": len(notificacoes)}
     
@@ -52,22 +52,10 @@ async def listar_notificacoes_ubs(usuario = Depends(get_usuario), session : Sess
 
 
 #Alteração dos status de uma notificação
-@cm_router.patch("/notificacoes/{notificacao_id}/status_recebido")
-async def validar_notificacao(notificacao_id: int, usuario = Depends(get_usuario), session: Session = Depends(create_session)):
-    notificacao = session.query(Notificacao).filter(Notificacao.id == notificacao_id, Notificacao.municipio == usuario.municipio).first()
-
-    if not notificacao:
-        raise HTTPException(status_code=404, detail="Notificação não encontrada.")
-
-    notificacao.status = "RECEBIDO"
-    session.commit()
-
-    return {"message":"Notificação recebida!"}
-
 
 @cm_router.patch("/notificacoes/{notificacao_id}/status_em_investigacao")
-async def validar_notificacao(notificacao_id: int, usuario = Depends(get_usuario), session: Session = Depends(create_session)):
-    notificacao = session.query(Notificacao).filter(Notificacao.id == notificacao_id, Notificacao.municipio == usuario.municipio).first()
+async def status_em_investigacao(notificacao_id: int, usuario = Depends(get_usuario), session: Session = Depends(create_session)):
+    notificacao = session.query(Notificacao).filter(Notificacao.id == notificacao_id).first()
 
     if not notificacao:
         raise HTTPException(status_code=404, detail="Notificação não encontrada.")
@@ -75,38 +63,38 @@ async def validar_notificacao(notificacao_id: int, usuario = Depends(get_usuario
     notificacao.status = "EM INVESTIGAÇÃO"
     session.commit()
 
-    return {"message":"Notificação em investigação!"}
+    return {"message":f"Status da notificação {notificacao_id}: Em investigação!"}
 
 
-@cm_router.patch("/notificacoes/{notificacao_id}/status_confirmado")
-async def validar_notificacao(notificacao_id: int, usuario = Depends(get_usuario), session: Session = Depends(create_session)):
-    notificacao = session.query(Notificacao).filter(Notificacao.id == notificacao_id, Notificacao.municipio == usuario.municipio).first()
-
-    if not notificacao:
-        raise HTTPException(status_code=404, detail="Notificação não encontrada.")
-
-    notificacao.status = "CONFIRMADO"
-    session.commit()
-
-    return {"message":"Notificação confirmada!"}
-
-
-@cm_router.patch("/notificacoes/{notificacao_id}/status_descartado")
-async def validar_notificacao(notificacao_id: int, usuario = Depends(get_usuario), session: Session = Depends(create_session)):
-    notificacao = session.query(Notificacao).filter(Notificacao.id == notificacao_id, Notificacao.municipio == usuario.municipio).first()
+@cm_router.patch("/notificacoes/{notificacao_id}/status_veridico")
+async def status_veridico(notificacao_id: int, usuario = Depends(get_usuario), session: Session = Depends(create_session)):
+    notificacao = session.query(Notificacao).filter(Notificacao.id == notificacao_id).first()
 
     if not notificacao:
         raise HTTPException(status_code=404, detail="Notificação não encontrada.")
 
-    notificacao.status = "DESCARTADO"
+    notificacao.status = "VERÍDICO"
     session.commit()
 
-    return {"message":"Notificação descartada!"}
+    return {"message":f"Status da notificação {notificacao_id}: Verídico!"}
+
+
+@cm_router.patch("/notificacoes/{notificacao_id}/status_nao_veridico")
+async def status_descartado(notificacao_id: int, usuario = Depends(get_usuario), session: Session = Depends(create_session)):
+    notificacao = session.query(Notificacao).filter(Notificacao.id == notificacao_id).first()
+
+    if not notificacao:
+        raise HTTPException(status_code=404, detail="Notificação não encontrada.")
+
+    notificacao.status = "NÃO VERÍDICO"
+    session.commit()
+
+    return {"message":f"Status da notificação {notificacao_id}: Não Verídico!"}
 
 
 @cm_router.patch("/notificacoes/{notificacao_id}/status_encerrado")
-async def validar_notificacao(notificacao_id: int, usuario = Depends(get_usuario), session: Session = Depends(create_session)):
-    notificacao = session.query(Notificacao).filter(Notificacao.id == notificacao_id, Notificacao.municipio == usuario.municipio).first()
+async def status_encerrado(notificacao_id: int, usuario = Depends(get_usuario), session: Session = Depends(create_session)):
+    notificacao = session.query(Notificacao).filter(Notificacao.id == notificacao_id).first()
 
     if not notificacao:
         raise HTTPException(status_code=404, detail="Notificação não encontrada.")
@@ -114,9 +102,7 @@ async def validar_notificacao(notificacao_id: int, usuario = Depends(get_usuario
     notificacao.status = "ENCERRADO"
     session.commit()
 
-    return {"message":"Notificação encerrada!"}
-
-# Adicionar em cm_router.py
+    return {"message":f"Status da notificação {notificacao_id}: Encerrado!"}# Adicionar em cm_router.py
 
 # Métricas resumidas do município
 @cm_router.get("/dashboard_stats")
@@ -124,12 +110,12 @@ async def obter_estatisticas(usuario = Depends(get_usuario), session: Session = 
     try:
         total = session.query(Notificacao).filter(Notificacao.municipio == usuario.municipio).count()
         investigacao = session.query(Notificacao).filter(Notificacao.municipio == usuario.municipio, Notificacao.status == "EM INVESTIGAÇÃO").count()
-        confirmados = session.query(Notificacao).filter(Notificacao.municipio == usuario.municipio, Notificacao.status == "CONFIRMADO").count()
+        veridicos = session.query(Notificacao).filter(Notificacao.municipio == usuario.municipio, Notificacao.status == "VERÍDICO").count()
         
         return {
             "total": total,
             "em_investigacao": investigacao,
-            "confirmados": confirmados
+            "veridicos": veridicos
         }
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Erro ao carregar estatísticas: {str(e)}")

@@ -61,4 +61,16 @@ class CMSchema(BaseModel):
 
     class Config:
         from_attributes = True
+
+
+#Schema dos dados do Vigilante Regional
+class VigilanteRegionalSchema(BaseModel):
+    nome: str
+    cpf: str
+    senha: str
+    superintendencia: int
+
+    class Config:
+        from_attributes = True
+
     

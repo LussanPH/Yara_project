@@ -1,7 +1,7 @@
 from sqlalchemy.orm import sessionmaker, Session
 from fastapi import Depends, HTTPException
 from fastapi.security import OAuth2PasswordBearer
-from models import db, Agente, UBS, Coordenador_Municipal
+from models import db, Agente, UBS, Coordenador_Municipal, Vigilancia_Regional
 from jose import jwt, JWTError
 from config import SECRET_KEY, ALGORITHM
 from datetime import datetime, timezone
@@ -37,6 +37,8 @@ def token_verification(token:str = Depends(oauth2_schema), session:Session = Dep
             usuario = session.query(UBS).filter(UBS.id == usuario_id).first()
         elif tipo_usuario == "CM":
             usuario = session.query(Coordenador_Municipal).filter(Coordenador_Municipal.id == usuario_id).first()
+        elif tipo_usuario == 'VR':
+            usuario = session.query(Vigilancia_Regional).filter(Vigilancia_Regional.id == usuario_id).first()
 
         if not usuario:
             raise HTTPException(status_code=401, detail="Usuário não encontrado.")
@@ -63,6 +65,8 @@ def get_usuario(token:str = Depends(oauth2_schema), session:Session = Depends(cr
             usuario = session.query(UBS).filter(UBS.id == usuario_id).first()
         elif tipo_usuario == 'CM':
             usuario = session.query(Coordenador_Municipal).filter(Coordenador_Municipal.id == usuario_id).first()
+        elif tipo_usuario == 'VR':
+            usuario = session.query(Vigilancia_Regional).filter(Vigilancia_Regional.id == usuario_id).first()
 
         if not usuario:
             raise HTTPException(status_code=401, detail=f'Usuário {tipo_usuario} não encontrado no banco de dados.')
@@ -84,5 +88,6 @@ class RoleChecker:
 somente_Agente = RoleChecker(["ACS/ACE"])
 somente_UBS = RoleChecker(["UBS"])
 somente_CM = RoleChecker(["CM"])
+somente_VR = RoleChecker(["VR"])
 
 

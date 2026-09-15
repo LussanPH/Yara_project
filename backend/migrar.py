@@ -23,6 +23,19 @@ try:
     # Depois apaga todas as notificações
     #cursor.execute('DELETE FROM "Notificaçoes"')
 
+    """
+    cursor.execute('INSERT INTO "Superintendencias_Ceara" (nome, municipio) VALUES (?, ?)',
+                    ('Grande Fortaleza', '["Aquiraz", "Caucaia", "Cascavel", "Chorozinho", '
+                    '"Eusébio", "Fortaleza", "Guaiúba", "Horizonte", "Itaitinga", "Maracanaú", '
+                    '"Maranguape", "Pacajus", "Pacatuba", "Paracuru", "Paraipaba", "Pindoretama", '
+                    '"São Gonçalo do Amarante", "São Luís do Curu", "Trairi"]'))
+
+    cursor.execute('INSERT INTO "Superintendencias_Ceara" (nome, municipio) VALUES (?, ?)',
+                    ('Serra de Ibiapaba', '["Carnaubal", "Croatá", "Guaraciaba do Norte", '
+                    '"Ibiapina", "Ipu", "São Benedito", "Tianguá", "Ubajara", "Viçosa do Ceará"]'))"""
+
+    #cursor.execute('DELETE FROM "Superintendencias_Ceara"')
+
     conn.commit()
 
 except Exception as e:

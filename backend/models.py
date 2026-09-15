@@ -1,4 +1,4 @@
-from sqlalchemy import create_engine, Column, Integer, String, Float, Boolean, ForeignKey, DateTime, MetaData
+from sqlalchemy import create_engine, Column, Integer, String, Float, Boolean, ForeignKey, DateTime, MetaData, JSON
 from sqlalchemy.orm import declarative_base, relationship
 
 convention = {
@@ -103,8 +103,8 @@ class Notificacao(Base):
         continuidade_situacao,
         descricao,
         acs_ace_id,
-        status="EM ANDAMENTO",
-        verificada = False,           #ADICIONADO O CAMPO VALIDADO
+        status="PENDENTE",
+        verificada = False,          
         rascunho=True,
         estado=None,
         municipio=None,
@@ -131,7 +131,7 @@ class Notificacao(Base):
         self.acs_ace_id = acs_ace_id
         self.status = status
         self.rascunho = rascunho
-        self.verificada = verificada            #ADICIONADO O CAMPO VALIDADO
+        self.verificada = verificada           
 
 
 class NotificacaoMedia(Base):
@@ -160,5 +160,34 @@ class Dados_UBS(Base):
         self.nome = nome
         self.municipio = municipio
         self.estado = estado
+
+
+class Superintendencias_Ceara(Base):
+    __tablename__ = "Superintendencias_Ceara"
+
+    id = Column("id", Integer, primary_key=True, autoincrement=True)
+    nome = Column("nome", String, nullable=False)
+    municipio = Column("municipio", JSON, nullable=False, default=list)
+
+    def __init__(self, nome, municipio):
+        self.nome = nome
+        self.municipio = municipio
+
+
+class Vigilancia_Regional(Base):
+    __tablename__ = "Vigilantes_Regional"
+
+    id = Column("id", Integer, primary_key=True, autoincrement=True)
+    cpf = Column("cpf", String)
+    senha = Column("senha", String)
+    nome = Column("nome", String, nullable=False)
+    superintendencia = Column("superintendencia", ForeignKey("Superintendencias_Ceara.id"))
+
+    def __init__(self, cpf, senha, nome, superintendencia):
+        self.cpf = cpf
+        self.senha = senha
+        self.nome = nome
+        self.superintendencia = superintendencia
+
 
 

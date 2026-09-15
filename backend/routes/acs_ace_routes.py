@@ -142,7 +142,7 @@ async def criar_notificacao(
         continuidade_situacao=continuidade_situacao,
         descricao=descricao,
         acs_ace_id=usuario.id,
-        status="EM ANDAMENTO",             #CAMPO STATUS COMO EM ANDAMENTO POR PADRÃO
+        status="PENDENTE",             #CAMPO STATUS COMO PENDENTE POR PADRÃO
         rascunho=rascunho,
         verificada=False              #ADICONADO O CAMPO VALIDADO COMO FALSE
     )
