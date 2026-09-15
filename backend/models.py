@@ -103,7 +103,7 @@ class Notificacao(Base):
         continuidade_situacao,
         descricao,
         acs_ace_id,
-        status="EM ANDAMENTO",
+        status="PENDENTE",
         verificada = False,          
         rascunho=True,
         estado=None,

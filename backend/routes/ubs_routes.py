@@ -93,7 +93,7 @@ async def listar_notificacoes_ubs(
 #Valida Notificação
 @ubs_router.patch("/notificacoes/{notificacao_id}/validar")
 async def validar_notificacao(notificacao_id: int, usuario = Depends(get_usuario), session: Session = Depends(create_session)):
-    notificacao = session.query(Notificacao).join(Agente, Notificacao.acs_ace_id == Agente.id).filter(Agente.ubs_atuante == usuario.ubs, Notificacao.id == notificacao_id, Notificacao.rascunho == False).first()
+    notificacao = session.query(Notificacao).filter(Notificacao.id == notificacao_id).first()
 
     if not notificacao:
         raise HTTPException(status_code=404, detail="Notificação não encontrada.")
@@ -107,7 +107,8 @@ async def validar_notificacao(notificacao_id: int, usuario = Depends(get_usuario
 # Complementar Notificação
 @ubs_router.patch("/notificacoes/{notificacao_id}/complementar")
 async def complementar_notificacao(notificacao_id: int, informacao_extra: str, usuario = Depends(get_usuario), session: Session = Depends(create_session)):
-    notificacao = session.query(Notificacao).join(Agente, Notificacao.acs_ace_id == Agente.id).filter(Agente.ubs_atuante == usuario.ubs, Notificacao.id == notificacao_id, Notificacao.rascunho == False).first()  #RETORNA APENAS SE A NOTIFICAÇÃO PERTENCER A UBS LOGADA
+    notificacao = session.query(Notificacao).filter(Notificacao.id == notificacao_id).first()
+
     if not notificacao:
         raise HTTPException(status_code=404, detail="Notificação não encontrada.")
     
@@ -124,3 +125,56 @@ async def dados_da_ubs(usuario = Depends(get_usuario), session: Session = Depend
         raise HTTPException(status_code=404, detail="Dados da UBS não cadastrados no sistema.")
     
     return {"Dados da UBS": dados_ubs}
+
+
+@ubs_router.patch("/notificacoes/{notificacao_id}/status_em_investigacao")
+async def status_em_investigacao(notificacao_id: int, usuario = Depends(get_usuario), session: Session = Depends(create_session)):
+    notificacao = session.query(Notificacao).filter(Notificacao.id == notificacao_id).first()
+
+    if not notificacao:
+        raise HTTPException(status_code=404, detail="Notificação não encontrada.")
+
+    notificacao.status = "EM INVESTIGAÇÃO"
+    session.commit()
+
+    return {"message":f"Status da notificação {notificacao_id}: Em investigação!"}
+
+
+@ubs_router.patch("/notificacoes/{notificacao_id}/status_veridico")
+async def status_veridico(notificacao_id: int, usuario = Depends(get_usuario), session: Session = Depends(create_session)):
+    notificacao = session.query(Notificacao).filter(Notificacao.id == notificacao_id).first()
+
+    if not notificacao:
+        raise HTTPException(status_code=404, detail="Notificação não encontrada.")
+
+    notificacao.status = "VERÍDICO"
+    session.commit()
+
+    return {"message":f"Status da notificação {notificacao_id}: Verídico!"}
+
+
+@ubs_router.patch("/notificacoes/{notificacao_id}/status_nao_veridico")
+async def status_descartado(notificacao_id: int, usuario = Depends(get_usuario), session: Session = Depends(create_session)):
+    notificacao = session.query(Notificacao).filter(Notificacao.id == notificacao_id).first()
+
+    if not notificacao:
+        raise HTTPException(status_code=404, detail="Notificação não encontrada.")
+
+    notificacao.status = "NÃO VERÍDICO"
+    session.commit()
+
+    return {"message":f"Status da notificação {notificacao_id}: Não Verídico!"}
+
+
+@ubs_router.patch("/notificacoes/{notificacao_id}/status_encerrado")
+async def status_encerrado(notificacao_id: int, usuario = Depends(get_usuario), session: Session = Depends(create_session)):
+    notificacao = session.query(Notificacao).filter(Notificacao.id == notificacao_id).first()
+
+    if not notificacao:
+        raise HTTPException(status_code=404, detail="Notificação não encontrada.")
+
+    notificacao.status = "ENCERRADO"
+    session.commit()
+
+    return {"message":f"Status da notificação {notificacao_id}: Encerrado!"}
+
