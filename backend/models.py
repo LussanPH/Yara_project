@@ -190,4 +190,18 @@ class Vigilancia_Regional(Base):
         self.superintendencia = superintendencia
 
 
+class Vigilancia_Estadual(Base):
+    __tablename__ = "Vigilantes_Estadual"
+
+    id = Column("id", Integer, primary_key=True, autoincrement=True)
+    cpf = Column("cpf", String)
+    senha = Column("senha", String)
+    nome = Column("nome", String, nullable=False)
+
+    def __init__(self, cpf, senha, nome):
+        self.cpf = cpf
+        self.senha = senha
+        self.nome = nome
+
+
 

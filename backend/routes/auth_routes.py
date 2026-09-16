@@ -3,7 +3,7 @@ from fastapi.security import OAuth2PasswordRequestForm
 from dependencies import create_session, token_verification
 from sqlalchemy.orm import Session
 from typing import Optional
-from models import Agente, UBS, Coordenador_Municipal, Vigilancia_Regional
+from models import Agente, UBS, Coordenador_Municipal, Vigilancia_Regional, Vigilancia_Estadual
 from security import verify_password
 from datetime import timedelta, datetime, timezone
 from config import ACCESS_TOKEN_EXPIRATE_MINUTES, ALGORITHM, SECRET_KEY
@@ -33,6 +33,8 @@ def login_auth(cpf, senha, tipo, session:Session):
         usuario = session.query(Coordenador_Municipal).filter(Coordenador_Municipal.cpf == cpf).first()
     elif tipo == "VR":
         usuario = session.query(Vigilancia_Regional).filter(Vigilancia_Regional.cpf == cpf).first()
+    elif tipo == "VE":
+        usuario = session.query(Vigilancia_Estadual).filter(Vigilancia_Estadual.cpf == cpf).first()
 
     else:
         return False
@@ -90,6 +92,9 @@ async def login(
         dados_usuario["superintendencia"] = usuario.superintendencia
         dados_usuario["cargo"] = "Vigilante Regional"
 
+    elif tipo_login == "VE":
+        dados_usuario["cargo"] = "Vigilante Estadual"
+
     return {
         "access_token":  access_token,
         "refresh_token": refresh_token,
@@ -104,7 +109,7 @@ async def create_access_token(dict_info: dict = Depends(token_verification)):
     tipo = dict_info.get("tipo")
     sub = dict_info.get("sub")
 
-    if tipo in ["ACS/ACE", "UBS", "CM", "VR"]:
+    if tipo in ["ACS/ACE", "UBS", "CM", "VR", "VE"]:
         access_token = create_jwt(sub, tipo)
         return {
             "access_token": access_token,
