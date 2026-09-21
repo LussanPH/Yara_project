@@ -9,7 +9,7 @@ from schemas import VigilanteEstadualSchema
 ve_router = APIRouter(prefix="/ve", tags=['ve'], dependencies=[Depends(somente_VE)])
 
 
-@ve_router.post('/criar_conta_vr')
+@ve_router.post('/criar_conta_ve')
 async def criar_ve(ve_schema : VigilanteEstadualSchema, session : Session = Depends(create_session)):
     ve = session.query(Vigilancia_Estadual).filter(Vigilancia_Estadual.cpf == ve_schema.cpf).first()
 

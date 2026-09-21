@@ -66,7 +66,7 @@ async def listar_notificacoes(usuario = Depends(get_usuario), session : Session 
 @vr_router.get('/dados_superintendencia')
 async def dados_superintendencia(usuario = Depends(get_usuario), session : Session = Depends(create_session)):
     try:
-        dados_superintendencia = session.query(Superintendencias_Ceara).filter(Superintendencias_Ceara.id == usuario.id).first()
+        dados_superintendencia = session.query(Superintendencias_Ceara).filter(Superintendencias_Ceara.id == usuario.superintendencia).first()
         
         if not dados_superintendencia:
             raise HTTPException(status_code=400, detail='Superintendência do usuário não encontrada.')
