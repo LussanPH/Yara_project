@@ -1,7 +1,7 @@
 from fastapi import APIRouter, HTTPException, Depends
 from sqlalchemy.orm import Session
 from sqlalchemy import func
-from dependencies import create_session, somente_UBS, get_usuario, somente_VR
+from dependencies import create_session, get_usuario, somente_VR
 from security import get_hashed_password
 from models import Notificacao, Vigilancia_Regional, Superintendencias_Ceara
 from schemas import VigilanteRegionalSchema

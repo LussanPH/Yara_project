@@ -73,4 +73,15 @@ class VigilanteRegionalSchema(BaseModel):
     class Config:
         from_attributes = True
 
+
+#Schema dos dados do Vigilante Estadual
+
+class VigilanteEstadualSchema(BaseModel):
+    nome: str
+    cpf: str
+    senha: str
+
+    class Config:
+        from_attributes = True    
+
     
