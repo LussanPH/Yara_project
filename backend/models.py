@@ -1,5 +1,9 @@
 from sqlalchemy import create_engine, Column, Integer, String, Float, Boolean, ForeignKey, DateTime, MetaData, JSON
 from sqlalchemy.orm import declarative_base, relationship
+from config import DATABASE_URL
+
+
+connect_args = {"check_same_thread": False} if DATABASE_URL.startswith("sqlite") else {}
 
 convention = {
     "ix": "ix_%(column_0_label)s",                                 
@@ -11,7 +15,7 @@ convention = {
 
 metadata = MetaData(naming_convention=convention)
 
-db = create_engine("sqlite:///banco.db", echo=True)
+db = create_engine(DATABASE_URL, connect_args=connect_args, pool_pre_ping=True, echo=True)
 Base = declarative_base(metadata=metadata)
 
 class Agente(Base):

@@ -1,6 +1,6 @@
 from fastapi import APIRouter, HTTPException, Depends
 from sqlalchemy.orm import Session
-from sqlalchemy import func
+from sqlalchemy import func, select
 from dependencies import create_session, get_usuario, somente_VR
 from security import get_hashed_password
 from models import Notificacao, Vigilancia_Regional, Superintendencias_Ceara
@@ -27,40 +27,28 @@ async def criar_vr(vr_schema : VigilanteRegionalSchema, session : Session = Depe
 
 
 @vr_router.get('/notificacoes')
-async def listar_notificacoes(usuario = Depends(get_usuario), session : Session = Depends(create_session)):
-    try:
-        municipio_superintendencia = func.json_each(Superintendencias_Ceara.municipio).table_valued("value")
-
-        notificacoes = (
-            session.query(Notificacao)
-            .select_from(Vigilancia_Regional)
-            .join(Superintendencias_Ceara, Vigilancia_Regional.superintendencia == Superintendencias_Ceara.id)
-            .join(municipio_superintendencia, Notificacao.municipio == municipio_superintendencia.c.value)
-            .filter(Vigilancia_Regional.id == usuario.id, Notificacao.rascunho == False)
-            .all()
+async def listar_notificacoes(  
+    usuario=Depends(get_usuario),
+    session: Session = Depends(create_session),
+):
+    municipios = (
+        select(func.json_array_elements_text(Superintendencias_Ceara.municipio))
+        .select_from(Vigilancia_Regional)
+        .join(
+            Superintendencias_Ceara,
+            Vigilancia_Regional.superintendencia == Superintendencias_Ceara.id,
         )
-        """
-        notificacoes = []
+        .where(Vigilancia_Regional.id == usuario.id)
+        .scalar_subquery()
+    )
 
-        for notificacao, superintendencia in resultados:
-            notificacoes.append({
-                "id": notificacao.id,
-                "nome": notificacao.nome,
-                "tipo_evento": notificacao.tipo_evento,
-                "categoria": notificacao.categoria,
-                "data_envio": notificacao.data_envio,
-                "pessoas_animais_infectados_afetados": notificacao.pessoas_animais_infectados_afetados,
-                "local_ocorrencia": notificacao.local_ocorrencia,
-                "continuidade_situacao": notificacao.continuidade_situacao,
-                "descricao": notificacao.descricao,
-                "acs_ace_id": notificacao.acs_ace_id,
-                "status": notificacao.status,
-                "rascunho": notificacao.rascunho,
-            })
-        """
-        return {'notificacoes' : notificacoes}
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Erro ao buscar notificações: {e}")
+    notificacoes = session.scalars(
+        select(Notificacao)
+        .where(Notificacao.municipio.in_(municipios))
+        .where(Notificacao.rascunho.is_(False))
+    ).all()
+
+    return {"notificacoes": notificacoes}
     
 
 @vr_router.get('/dados_superintendencia')
