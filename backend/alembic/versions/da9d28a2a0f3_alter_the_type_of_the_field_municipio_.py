@@ -25,7 +25,8 @@ def upgrade() -> None:
         batch_op.alter_column('municipio',
                existing_type=sa.VARCHAR(),
                type_=sa.JSON(),
-               existing_nullable=False)
+               existing_nullable=False,
+               postgresql_using="municipio::json")
 
     # ### end Alembic commands ###
 
