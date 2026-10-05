@@ -4,7 +4,7 @@ from models import Agente, UBS, Notificacao, NotificacaoMedia
 from typing import List, Annotated
 from sqlalchemy.orm import Session
 from security import get_hashed_password
-import datetime
+from datetime import datetime, date
 from config import GROK_API_KEY, CLOUDINARY_API_KEY, CLOUDINARY_API_SECRET, CLOUDINARY_CLOUD_NAME
 from groq import Groq
 import cloudinary
@@ -110,10 +110,12 @@ async def criar_notificacao(
     descricao : str = Form(...),
     medias : list[UploadFile] = File(default=[]),  #RETIRADO STATUS DO FORMULÁRIO
     rascunho : bool = Form(...), 
+    data_ocorrencia_str : str = Form(...),
     session : Session = Depends(create_session), 
     usuario = Depends(get_usuario)
 ):
-    data_envio = datetime.datetime.now()
+    data_envio = datetime.now()
+    data_ocorrencia = datetime.fromisoformat(str(data_ocorrencia_str))
     latitude = None
     longitude = None
 
@@ -131,6 +133,7 @@ async def criar_notificacao(
         data_envio=data_envio,
         pessoas_animais_infectados_afetados=pessoas_animais_infectados_afetados,
         local_ocorrencia=local_ocorrencia,
+        data_ocorrencia=data_ocorrencia,
 
         estado=estado,
         municipio=municipio,

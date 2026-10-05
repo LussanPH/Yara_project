@@ -9,22 +9,6 @@ import datetime
 ubs_router = APIRouter(prefix="/ubs", tags=["ubs"], dependencies=[Depends(somente_UBS)])
 
 
-#Criação de conta ubs
-@ubs_router.post("/criar_conta_ubs")
-async def criar_ubs(ubs_schema : UBSSchema, session : Session = Depends(create_session)): 
-    ubs = session.query(UBS).filter(UBS.cpf == ubs_schema.cpf).first()
-
-    if ubs:
-        raise HTTPException(status_code=400, detail="UBS já cadastrada no sistema!")
-    
-    senha_hashed = get_hashed_password(ubs_schema.senha)
-    ubs_nova = UBS(senha_hashed, ubs_schema.nome, ubs_schema.ubs, ubs_schema.municipio, ubs_schema.cpf)
-    session.add(ubs_nova)
-    session.commit()
-    
-    return {"message": "UBS criada com sucesso!"}
-
-
 #Criação de conta acs/ace
 @ubs_router.post("/criar_conta_acs_ace")
 async def criar_acs_ace(agente_schema : AgenteSchema, session : Session = Depends(create_session)): 

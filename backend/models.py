@@ -1,4 +1,4 @@
-from sqlalchemy import create_engine, Column, Integer, String, Float, Boolean, ForeignKey, DateTime, MetaData, JSON
+from sqlalchemy import create_engine, Column, Integer, String, Float, Boolean, ForeignKey, DateTime, MetaData, JSON, Date
 from sqlalchemy.orm import declarative_base, relationship
 from config import DATABASE_URL
 
@@ -80,6 +80,7 @@ class Notificacao(Base):
     tipo_evento = Column("tipo_evento", String)
     categoria = Column("categoria", String)
     data_envio = Column("data_envio", DateTime)
+    data_ocorrencia = Column("data_ocorrencia", DateTime)
     pessoas_animais_infectados_afetados = Column("pessoas_animais_infectados_afetados", Integer)
     local_ocorrencia = Column("local_ocorrencia", String)
     estado = Column("estado", String, nullable=True)
@@ -107,6 +108,7 @@ class Notificacao(Base):
         continuidade_situacao,
         descricao,
         acs_ace_id,
+        data_ocorrencia,
         status="PENDENTE",
         verificada = False,          
         rascunho=True,
@@ -120,6 +122,7 @@ class Notificacao(Base):
         self.tipo_evento = tipo_evento
         self.categoria = categoria
         self.data_envio = data_envio
+        self.data_ocorrencia = data_ocorrencia
         self.pessoas_animais_infectados_afetados = pessoas_animais_infectados_afetados
         self.local_ocorrencia = local_ocorrencia
 

@@ -3,8 +3,8 @@ from sqlalchemy.orm import Session
 from dependencies import create_session, somente_CM, get_usuario
 from security import get_hashed_password
 from fastapi.responses import Response
-from models import Notificacao, Coordenador_Municipal
-from schemas import CMSchema
+from models import Notificacao, Coordenador_Municipal, UBS, Agente
+from schemas import CMSchema, UBSSchema, AgenteSchema
 from fastapi.responses import StreamingResponse
 from io import BytesIO
 
@@ -23,20 +23,38 @@ from reportlab.lib.enums import TA_CENTER
 cm_router = APIRouter(prefix="/cm", tags=["cm"], dependencies=[Depends(somente_CM)])
 
 
-#Criaçaõ de conta CM
-@cm_router.post("/criar_conta")
-async def criar_cm(cm_schema : CMSchema, session : Session = Depends(create_session)): 
-    cm = session.query(Coordenador_Municipal).filter(Coordenador_Municipal.cpf == cm_schema.cpf).first()
+#Criação de conta Agente ACS/ACE
+@cm_router.post("/criar_conta_acs_ace")
+async def criar_acs_ace(acs_ace_schema : AgenteSchema, session : Session = Depends(create_session)): 
+    acs_ace = session.query(Agente).filter(Agente.cpf == acs_ace_schema.cpf).first()
 
-    if cm:
-        raise HTTPException(status_code=400, detail="Coordenador já cadastrado no sistema!")
+    if acs_ace:
+        raise HTTPException(status_code=400, detail="Agente já cadastrado no sistema!")
     
-    senha_hashed = get_hashed_password(cm_schema.senha)
-    cm_novo = Coordenador_Municipal(cm_schema.cpf, senha_hashed, cm_schema.nome, cm_schema.municipio)
-    session.add(cm_novo)
+    senha_hashed = get_hashed_password(acs_ace_schema.senha)
+    acs_ace_novo = Agente(senha_hashed, acs_ace_schema.cargo, acs_ace_schema.nome, acs_ace_schema.ubs_atuante, acs_ace_schema.cpf, acs_ace_schema.microarea)
+    session.add(acs_ace_novo)
     session.commit()
     
-    return {"message": "Coordenador Municipal criado com sucesso!"}
+    return {"message": "Agente criado com sucesso!"}
+
+
+
+#Criaçaõ de conta UBS
+@cm_router.post("/criar_conta_ubs")
+async def criar_ubs(ubs_schema : UBSSchema, session : Session = Depends(create_session)): 
+    ubs = session.query(UBS).filter(UBS.cpf == ubs_schema.cpf).first()
+
+    if ubs:
+        raise HTTPException(status_code=400, detail="Conta UBS já cadastrada no sistema!")
+    
+    senha_hashed = get_hashed_password(ubs_schema.senha)
+    ubs_novo = UBS(senha_hashed, ubs_schema.nome, ubs_schema.ubs, ubs_schema.municipio, ubs_schema.cpf)
+    session.add(ubs_novo)
+    session.commit()
+    
+    return {"message": "Conta UBS criada com sucesso!"}
+
 
 
 #Lista notificações da região
@@ -102,7 +120,19 @@ async def status_encerrado(notificacao_id: int, usuario = Depends(get_usuario), 
     notificacao.status = "ENCERRADO"
     session.commit()
 
-    return {"message":f"Status da notificação {notificacao_id}: Encerrado!"}# Adicionar em cm_router.py
+    return {"message":f"Status da notificação {notificacao_id}: Encerrado!"}
+
+
+@cm_router.patch("/notificacoes/{notificacao_id}/complementar")
+async def complementar_notificacao(notificacao_id: int, informacao_extra: str, usuario = Depends(get_usuario), session: Session = Depends(create_session)):
+    notificacao = session.query(Notificacao).filter(Notificacao.id == notificacao_id).first()
+
+    if not notificacao:
+        raise HTTPException(status_code=404, detail="Notificação não encontrada.")
+    
+    notificacao.descricao += f"\n[Complemento Coordenador]: {informacao_extra}"
+    session.commit()
+    return {"message": "Notificação complementada com sucesso!"}
 
 # Métricas resumidas do município
 @cm_router.get("/dashboard_stats")

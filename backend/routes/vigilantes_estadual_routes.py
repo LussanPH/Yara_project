@@ -2,8 +2,8 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from dependencies import create_session, get_usuario, somente_VE
 from security import get_hashed_password
-from models import Notificacao, Vigilancia_Estadual
-from schemas import VigilanteEstadualSchema
+from models import Notificacao, Vigilancia_Estadual, Vigilancia_Regional
+from schemas import VigilanteEstadualSchema, VigilanteRegionalSchema
 
 
 ve_router = APIRouter(prefix="/ve", tags=['ve'], dependencies=[Depends(somente_VE)])
@@ -22,6 +22,23 @@ async def criar_ve(ve_schema : VigilanteEstadualSchema, session : Session = Depe
     session.commit()
 
     return {'message' : 'Vigilante Estadual criado com sucesso!'}
+
+
+
+@ve_router.post('/criar_conta_vr')
+async def criar_vr(vr_schema : VigilanteRegionalSchema, session : Session = Depends(create_session)):
+    vr = session.query(Vigilancia_Regional).filter(Vigilancia_Regional.cpf == vr_schema.cpf).first()
+
+    if vr:
+        raise HTTPException(status_code=400, detail="Vigilante Regional já cadastrado no sistema!")
+
+    senha_hashed = get_hashed_password(vr_schema.senha)
+    vr_novo = Vigilancia_Regional(vr_schema.cpf, senha_hashed, vr_schema.nome, vr_schema.superintendencia)
+    session.add(vr_novo)
+    session.commit()
+
+    return {'message': 'Vigilante Regional cadastrado com sucesso!'}
+
 
 
 @ve_router.get('/notificacoes')
