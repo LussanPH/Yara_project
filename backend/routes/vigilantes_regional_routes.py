@@ -35,7 +35,7 @@ async def listar_notificacoes(
     session: Session = Depends(create_session),
 ):
     municipios = (
-        select(func.json_array_elements_text(Superintendencias_Ceara.municipio))
+        select(func.jsonb_array_elements_text(Superintendencias_Ceara.municipio))
         .select_from(Vigilancia_Regional)
         .join(
             Superintendencias_Ceara,

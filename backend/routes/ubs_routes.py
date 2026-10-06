@@ -53,6 +53,7 @@ async def listar_notificacoes_ubs(
                 "nome": notificacao.nome,
                 "tipo_evento": notificacao.tipo_evento,
                 "categoria": notificacao.categoria,
+                "data_ocorrencia": notificacao.data_ocorrencia,
                 "data_envio": notificacao.data_envio,
                 "pessoas_animais_infectados_afetados":
                     notificacao.pessoas_animais_infectados_afetados,
@@ -76,7 +77,7 @@ async def listar_notificacoes_ubs(
 
 #Valida Notificação
 @ubs_router.patch("/notificacoes/{notificacao_id}/validar")
-async def validar_notificacao(notificacao_id: int, usuario = Depends(get_usuario), session: Session = Depends(create_session)):
+async def validar_notificacao(notificacao_id: int, session: Session = Depends(create_session)):
     notificacao = session.query(Notificacao).filter(Notificacao.id == notificacao_id).first()
 
     if not notificacao:
@@ -90,7 +91,7 @@ async def validar_notificacao(notificacao_id: int, usuario = Depends(get_usuario
 
 # Complementar Notificação
 @ubs_router.patch("/notificacoes/{notificacao_id}/complementar")
-async def complementar_notificacao(notificacao_id: int, informacao_extra: str, usuario = Depends(get_usuario), session: Session = Depends(create_session)):
+async def complementar_notificacao(notificacao_id: int, informacao_extra: str, session: Session = Depends(create_session)):
     notificacao = session.query(Notificacao).filter(Notificacao.id == notificacao_id).first()
 
     if not notificacao:
@@ -112,7 +113,7 @@ async def dados_da_ubs(usuario = Depends(get_usuario), session: Session = Depend
 
 
 @ubs_router.patch("/notificacoes/{notificacao_id}/status_em_investigacao")
-async def status_em_investigacao(notificacao_id: int, usuario = Depends(get_usuario), session: Session = Depends(create_session)):
+async def status_em_investigacao(notificacao_id: int, session: Session = Depends(create_session)):
     notificacao = session.query(Notificacao).filter(Notificacao.id == notificacao_id).first()
 
     if not notificacao:
@@ -125,7 +126,7 @@ async def status_em_investigacao(notificacao_id: int, usuario = Depends(get_usua
 
 
 @ubs_router.patch("/notificacoes/{notificacao_id}/status_veridico")
-async def status_veridico(notificacao_id: int, usuario = Depends(get_usuario), session: Session = Depends(create_session)):
+async def status_veridico(notificacao_id: int, session: Session = Depends(create_session)):
     notificacao = session.query(Notificacao).filter(Notificacao.id == notificacao_id).first()
 
     if not notificacao:
@@ -138,7 +139,7 @@ async def status_veridico(notificacao_id: int, usuario = Depends(get_usuario), s
 
 
 @ubs_router.patch("/notificacoes/{notificacao_id}/status_nao_veridico")
-async def status_descartado(notificacao_id: int, usuario = Depends(get_usuario), session: Session = Depends(create_session)):
+async def status_descartado(notificacao_id: int, session: Session = Depends(create_session)):
     notificacao = session.query(Notificacao).filter(Notificacao.id == notificacao_id).first()
 
     if not notificacao:
@@ -151,7 +152,7 @@ async def status_descartado(notificacao_id: int, usuario = Depends(get_usuario),
 
 
 @ubs_router.patch("/notificacoes/{notificacao_id}/status_encerrado")
-async def status_encerrado(notificacao_id: int, usuario = Depends(get_usuario), session: Session = Depends(create_session)):
+async def status_encerrado(notificacao_id: int, session: Session = Depends(create_session)):
     notificacao = session.query(Notificacao).filter(Notificacao.id == notificacao_id).first()
 
     if not notificacao:

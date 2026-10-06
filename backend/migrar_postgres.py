@@ -1,4 +1,5 @@
 import psycopg
+from psycopg.types.json import Jsonb
 from datetime import datetime
 
 conexao_config = {
@@ -14,14 +15,28 @@ try:
             
 
             # Query com placeholders %s
-            query_insert = 'INSERT INTO "Notificaçoes" (nome, tipo_evento, categoria, pessoas_animais_infectados_afetados, local_ocorrencia, estado, municipio, endereco, continuidade_situacao, descricao, acs_ace_id, status, rascunho, verificada, data_ocorrencia, data_envio) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s);'
-            dados_cliente = ("Crise de Leptospirose", "Doença", "Contaminação de Esgoto", 20, "Escola", "Ceará", "Fortaleza", "Rua Liberato Barroso, 128", "Em andamento", "Muitos casos de leptospirose", 1, "PENDENTE", False, False, data_ocorrencia, datetime.now())
+            query_insert = 'INSERT INTO "Superintendencias_Ceara" (nome, coads, municipio) \
+                            VALUES (%s, %s, %s);'
+                            
+            coads = ['Fortaleza', 'Caucaia', 'Maracanaú', 'Baturité', 'Itapipoca', 'Cascavel']
+            municipio = ['Aquiraz', 'Eusébio', 'Fortaleza', 'Itaitinga', 'Apuiarés', 'Caucaia',
+                         'General Sampaio', 'Itapajé', 'Pararucu', 'Paraipaba', 'Pentecoste',
+                         'São Gonçalo Do Amarante', 'São Luís do Curu', 'Tejuçuoca', 'Acarape',
+                         'Barreira', 'Guaiúba', 'Maracanaú', 'Maranguape', 'Pacatuba', 'Palmácia',
+                         'Redenção', 'Aracoiaba', 'Aratuba', 'Baturité', 'Capistrano', 'Guaramiranga',
+                         'Itapiúna', 'Mulungu', 'Pacoti', 'Amontada', 'Itapipoca', 'Miraíma', 'Tururu',
+                         'Trairi', 'Uruburetama', 'Umirim', 'Beberibe', 'Cascavel', 'Chorozinho', 'Horizonte',
+                         'Ocara', 'Pacajus', 'Pindoretama']
             
-            #query_delete = 'TRUNCATE TABLE "Notificaçoes" RESTART IDENTITY CASCADE'
+            dados_cliente = ('Fortaleza', Jsonb(coads), Jsonb(municipio))
+            
+            #query_delete = 'TRUNCATE TABLE "Superintendencias_Ceara" RESTART IDENTITY CASCADE'
             
 
             # Executa a inserção passando os dados como tupla
             cursor.execute(query_insert, dados_cliente)
+            
+            #cursor.execute(query_delete)
 
             # CRÍTICO: Confirma a transação no banco de dados
             conn.commit()
