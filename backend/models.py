@@ -170,18 +170,31 @@ class Dados_UBS(Base):
         self.estado = estado
 
 
+
 class Superintendencias_Ceara(Base):
     __tablename__ = "Superintendencias_Ceara"
 
     id = Column("id", Integer, primary_key=True, autoincrement=True)
     nome = Column("nome", String, nullable=False)
-    coads = Column("coads", JSONB, nullable=False, default=list)
-    municipio = Column("municipio", JSONB, nullable=False, default=list)
 
-    def __init__(self, nome, municipio, coads):
-        self.nome = nome
-        self.municipio = municipio
-        self.coads = coads
+
+
+class COADS(Base):
+    __tablename__ = 'COADS'
+
+    id = Column("id", Integer, primary_key=True, autoincrement=True)
+    coads = Column("coads", String, nullable=False)
+    fk_superintendencia = Column("fk_superintendencia", ForeignKey("Superintendencias_Ceara.id"))
+
+
+
+class Municipios(Base):
+    __tablename__ = 'Municipios'
+
+    id = Column("id", Integer, primary_key=True, autoincrement=True)
+    municipio = Column("municipio", String, nullable=False)
+    fk_coads = Column("fk_coads", ForeignKey("COADS.id"))
+    
 
 
 class Vigilancia_Regional(Base):

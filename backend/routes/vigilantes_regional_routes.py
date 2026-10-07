@@ -3,8 +3,8 @@ from sqlalchemy.orm import Session
 from sqlalchemy import func, select
 from dependencies import create_session, get_usuario, somente_VR
 from security import get_hashed_password
-from models import Notificacao, Vigilancia_Regional, Superintendencias_Ceara, Coordenador_Municipal
-from schemas import VigilanteRegionalSchema, CMSchema
+from models import Notificacao, Vigilancia_Regional, Superintendencias_Ceara, Coordenador_Municipal, Municipios, COADS
+from schemas import VigilanteRegionalSchema, CMSchema, Notificacao_com_Coads, NotificacaoSchema
 
 
 
@@ -29,29 +29,27 @@ async def criar_cm(cm_schema : CMSchema, session : Session = Depends(create_sess
 
 
 
-@vr_router.get('/notificacoes')
+@vr_router.get('/notificacoes', response_model=list[Notificacao_com_Coads])
 async def listar_notificacoes(  
     usuario=Depends(get_usuario),
     session: Session = Depends(create_session),
 ):
-    municipios = (
-        select(func.jsonb_array_elements_text(Superintendencias_Ceara.municipio))
-        .select_from(Vigilancia_Regional)
-        .join(
-            Superintendencias_Ceara,
-            Vigilancia_Regional.superintendencia == Superintendencias_Ceara.id,
-        )
-        .where(Vigilancia_Regional.id == usuario.id)
-        .scalar_subquery()
-    )
 
-    notificacoes = session.scalars(
-        select(Notificacao)
-        .where(Notificacao.municipio.in_(municipios))
-        .where(Notificacao.rascunho.is_(False))
+    notificacoes_coads = session.execute(
+        select(Notificacao, COADS.coads)
+        .join(Municipios, Notificacao.municipio == Municipios.municipio)
+        .join(COADS, Municipios.fk_coads == COADS.id)
+        .where(COADS.fk_superintendencia == usuario.superintendencia)
     ).all()
 
-    return {"notificacoes": notificacoes}
+    return [
+        Notificacao_com_Coads(
+            **NotificacaoSchema.model_validate(row.Notificacao).model_dump(),
+            coads = row.coads
+        )
+
+        for row in notificacoes_coads
+    ]
     
 
 @vr_router.get('/dados_superintendencia')
