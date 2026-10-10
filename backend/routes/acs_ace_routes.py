@@ -4,6 +4,7 @@ from dependencies import create_session, token_verification, somente_Agente, get
 from models import Agente, UBS, Notificacao, NotificacaoMedia
 from typing import List, Annotated
 from sqlalchemy.orm import Session
+from sqlalchemy import select
 from security import get_hashed_password
 from datetime import datetime, date
 from config import GROK_API_KEY, CLOUDINARY_API_KEY, CLOUDINARY_API_SECRET, CLOUDINARY_CLOUD_NAME
@@ -418,8 +419,10 @@ async def gerar_relatorio_notificacao_pdf(
     session: Session = Depends(create_session)
 ):
     try:
-        notificacao = session.query(Notificacao).filter(
-            Notificacao.id == notificacao_id,
+        notificacao = session.scalars(
+            select(Notificacao)
+            .where(Notificacao.acs_ace_id == usuario.id,
+                  Notificacao.id == notificacao_id)
         ).first()
 
         if not notificacao:

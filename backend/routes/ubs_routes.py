@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import Response, StreamingResponse
 from sqlalchemy.orm import Session
+from sqlalchemy import select
 from dependencies import create_session, somente_UBS, get_usuario
 from security import get_hashed_password
 from models import Notificacao, UBS, Agente, Dados_UBS
@@ -187,11 +188,20 @@ async def status_encerrado(notificacao_id: int, session: Session = Depends(creat
 @ubs_router.get("/exportar_relatorio")
 async def exportar_relatorio(usuario = Depends(get_usuario), session: Session = Depends(create_session)):
     try:
-        notificacoes = session.query(Notificacao).filter(
-            Notificacao.municipio == usuario.municipio,
+        notificacoes_dados_ubs = session.scalars(
+            select(Notificacao)
+            .join(Agente, Notificacao.acs_ace_id == Agente.id)
+            .join(Dados_UBS, Agente.ubs_atuante == Dados_UBS.id)
+            .where(Dados_UBS.id == usuario.ubs)
         ).all()
         
-        dados_ubs = #CONTINUAR AQUI
+        dados_ubs = session.scalars(
+            select(Dados_UBS)
+            .where(Dados_UBS.id == usuario.ubs)
+        ).first()
+        
+        if not dados_ubs:
+            raise HTTPException(status_code=404, detail=f"Nenhuma notificação encontada atrelada à ubs de id: {usuario.ubs}")
         
         relatorio = [
             {
@@ -202,10 +212,10 @@ async def exportar_relatorio(usuario = Depends(get_usuario), session: Session = 
                 "data": getattr(n, 'data_ocorrencia', 'N/A'),
                 "local": getattr(n, 'local_ocorrencia', 'N/A')
             }
-            for n in notificacoes
+            for n in notificacoes_dados_ubs
         ]
         
-        return {"relatorio": relatorio, "": usuario.municipio}
+        return {"relatorio": relatorio, "UBS": dados_ubs.nome, "Municipio": dados_ubs.municipio}
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Erro ao gerar relatório: {str(e)}")
 
@@ -215,14 +225,22 @@ async def exportar_relatorio_pdf(
     session: Session = Depends(create_session)
 ):
     try:
-        notificacoes = (
-            session.query(Notificacao)
-            .filter(
-                Notificacao.municipio == usuario.municipio,
-            )
+        notificacoes = session.scalars(
+            select(Notificacao)
+            .join(Agente, Notificacao.acs_ace_id == Agente.id)
+            .join(Dados_UBS, Agente.ubs_atuante == Dados_UBS.id)
+            .where(Dados_UBS.id == usuario.ubs)
             .order_by(Notificacao.data_ocorrencia.desc())
-            .all()
-        )
+        ).all()
+        
+        
+        dados_ubs = session.scalars(
+            select(Dados_UBS)
+            .where(Dados_UBS.id == usuario.ubs)
+        ).first()
+        
+        if not dados_ubs:
+            raise HTTPException(status_code=404, detail=f"Nenhuma notificação encontada atrelada à ubs de id: {usuario.ubs}")
 
         buffer = BytesIO()
 
@@ -252,7 +270,14 @@ async def exportar_relatorio_pdf(
 
         elementos.append(
             Paragraph(
-                f"Município: {usuario.municipio}",
+                f"Município: {dados_ubs.municipio}",
+                styles["Normal"]
+            )
+        )
+        
+        elementos.append(
+            Paragraph(
+                f"UBS: {dados_ubs.nome}",
                 styles["Normal"]
             )
         )
@@ -394,9 +419,11 @@ async def gerar_relatorio_notificacao_pdf(
     session: Session = Depends(create_session)
 ):
     try:
-        notificacao = session.query(Notificacao).filter(
-            Notificacao.id == notificacao_id,
-            Notificacao.municipio == usuario.municipio,
+        notificacao = session.scalars(
+            select(Notificacao)
+            .join(Agente, Notificacao.acs_ace_id == Agente.id)
+            .join(Dados_UBS, Agente.ubs_atuante == Dados_UBS.id)
+            .where(Dados_UBS.id == usuario.ubs, Notificacao.id == notificacao_id)
         ).first()
 
         if not notificacao:

@@ -1,5 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
+from sqlalchemy import select
 from dependencies import create_session, somente_CM, get_usuario
 from security import get_hashed_password
 from fastapi.responses import Response
@@ -370,9 +371,10 @@ async def gerar_relatorio_notificacao_pdf(
     session: Session = Depends(create_session)
 ):
     try:
-        notificacao = session.query(Notificacao).filter(
-            Notificacao.id == notificacao_id,
-            Notificacao.municipio == usuario.municipio,
+        notificacao = session.scalars(
+            select(Notificacao)
+            .where(Notificacao.municipio == usuario.municipio,
+                  Notificacao.id == notificacao_id)
         ).first()
 
         if not notificacao:

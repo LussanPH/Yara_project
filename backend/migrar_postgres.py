@@ -65,8 +65,16 @@ try:
                             VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s);'
             
             dados_cliente = ('Doença aviária', 'EPIZOOTIA', 'Doença de Aves', datetime.now(), data_ocorrencia, 15, 'Ambiente Rural', 'Ceará', 'Tauá', 'Não sei', 
-                             'Várias aves com doença aviária', 1, 'PENDENTE', False, False)
+                             'Várias aves com doença aviária', 4, 'PENDENTE', False, False)
             cursor.execute(query_insert, dados_cliente)
+            
+            """
+            query_insert = 'INSERT INTO "Dados_UBS" (nome, municipio, estado) \
+                            VALUES (%s, %s, %s)'
+                            
+            dados_insert = ('ALFONSO DE MEDEIROS', 'Fortaleza', 'Ceará')
+            
+            cursor.execute(query_insert, dados_insert)"""
 
             
             
