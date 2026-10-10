@@ -7,6 +7,7 @@ from models import Notificacao, Coordenador_Municipal, UBS, Agente
 from schemas import CMSchema, UBSSchema, AgenteSchema
 from fastapi.responses import StreamingResponse
 from io import BytesIO
+from xml.sax.saxutils import escape
 
 from reportlab.lib.pagesizes import A4
 from reportlab.platypus import (
@@ -17,10 +18,15 @@ from reportlab.platypus import (
     TableStyle,
 )
 from reportlab.lib import colors
-from reportlab.lib.styles import getSampleStyleSheet
+from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib.enums import TA_CENTER
 
 cm_router = APIRouter(prefix="/cm", tags=["cm"], dependencies=[Depends(somente_CM)])
+
+
+def celula(valor : str, style : ParagraphStyle):
+    return Paragraph(escape(valor), style)
+
 
 
 #Criação de conta Agente ACS/ACE
@@ -141,11 +147,17 @@ async def obter_estatisticas(usuario = Depends(get_usuario), session: Session = 
         total = session.query(Notificacao).filter(Notificacao.municipio == usuario.municipio).count()
         investigacao = session.query(Notificacao).filter(Notificacao.municipio == usuario.municipio, Notificacao.status == "EM INVESTIGAÇÃO").count()
         veridicos = session.query(Notificacao).filter(Notificacao.municipio == usuario.municipio, Notificacao.status == "VERÍDICO").count()
+        nao_veridico = session.query(Notificacao).filter(Notificacao.municipio == usuario.municipio, Notificacao.status == "NÃO VERÍDICO").count()
+        encerrado = session.query(Notificacao).filter(Notificacao.municipio == usuario.municipio, Notificacao.status == "ENCERRADO").count()
+        pendente = session.query(Notificacao).filter(Notificacao.municipio == usuario.municipio, Notificacao.status == "PENDENTE").count()
         
         return {
             "total": total,
             "em_investigacao": investigacao,
-            "veridicos": veridicos
+            "veridicos": veridicos,
+            "nao_veridicos": nao_veridico,
+            "encerrados": encerrado,
+            "pendentes": pendente
         }
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Erro ao carregar estatísticas: {str(e)}")
@@ -161,10 +173,10 @@ async def exportar_relatorio(usuario = Depends(get_usuario), session: Session = 
             {
                 "id": n.id,
                 "categoria": getattr(n, 'categoria', 'N/A'),
-                "tipo": getattr(n, 'tipo', 'N/A'),
+                "tipo": getattr(n, 'tipo_evento', 'N/A'),
                 "status": n.status,
-                "data": getattr(n, 'data_criacao', 'N/A'),
-                "local": getattr(n, 'local', 'N/A')
+                "data": getattr(n, 'data_ocorrencia', 'N/A'),
+                "local": getattr(n, 'local_ocorrencia', 'N/A')
             }
             for n in notificacoes
         ]
@@ -184,7 +196,7 @@ async def exportar_relatorio_pdf(
             .filter(
                 Notificacao.municipio == usuario.municipio,
             )
-            .order_by(Notificacao.data_envio.desc())
+            .order_by(Notificacao.data_ocorrencia.desc())
             .all()
         )
 
@@ -230,7 +242,7 @@ async def exportar_relatorio_pdf(
 
         elementos.append(Spacer(1, 20))
 
-        dados = [[
+        dados : list[list[str | Paragraph]] = [[
             "ID",
             "Categoria",
             "Evento",
@@ -238,25 +250,32 @@ async def exportar_relatorio_pdf(
             "Local",
             "Data"
         ]]
+        
+        row_style = ParagraphStyle(
+            "Célula",
+            parent=styles['Normal'],
+            fontSize=8,
+            leading = 10
+        )
+        
 
         for n in notificacoes:
+            data = '-'
+            if n.data_ocorrencia.strftime("%d/%m/%Y %H:%M"):
+                data = n.data_ocorrencia.strftime("%d/%m/%Y %H:%M") 
             dados.append([
-                str(n.id),
-                str(n.categoria or "-"),
-                str(n.tipo_evento or "-"),
-                str(n.status or "-"),
-                str(n.local_ocorrencia or "-"),
-                (
-                    n.data_envio.strftime("%d/%m/%Y %H:%M")
-                    if n.data_envio
-                    else "-"
-                ),
+                celula(str(n.id), row_style),
+                celula(str(n.categoria or '-'), row_style),
+                celula(str(n.tipo_evento or '-'), row_style),
+                celula(str(n.status), row_style),
+                celula(str(n.local_ocorrencia) or '-', row_style),
+                celula(str(data), row_style)
             ])
 
         tabela = Table(
             dados,
             repeatRows=1,
-            colWidths=[35, 65, 90, 80, 100, 75],
+            colWidths=[25, 150, 60, 80, 100, 80],
         )
 
         tabela.setStyle(
@@ -395,7 +414,7 @@ async def gerar_relatorio_notificacao_pdf(
             ["Tipo do evento", str(notificacao.tipo_evento or "—")],
             ["Categoria", str(notificacao.categoria or "—")],
             ["Status", str(notificacao.status or "—")],
-            ["Data de envio", str(notificacao.data_envio or "—")],
+            ["Data de Ocorência", str(notificacao.data_ocorrencia or "—")],
             ["Local", str(notificacao.local_ocorrencia or "—")],
             [
                 "Afetados",

@@ -14,7 +14,8 @@ try:
             
 
             # Query com placeholders %s
-            """query_insert = 'INSERT INTO "Superintendencias_Ceara" (nome) \
+            """
+            query_insert = 'INSERT INTO "Superintendencias_Ceara" (nome) \
                             VALUES (%s);'
             
             dados_cliente = ('Fortaleza',)
@@ -25,14 +26,15 @@ try:
             conn.commit()
             print("Superintendencias inseridas com sucesso!")
 
+            
             query_insert = 'INSERT INTO "COADS" (coads, fk_superintendencia) \
                             VALUES (%s, %s);'
 
-            dados_cliente = ('Fortaleza', 4)
+            dados_cliente = ('Fortaleza', 1)
             cursor.execute(query_insert, dados_cliente)
-            dados_cliente = ('Caucaia', 4)
+            dados_cliente = ('Caucaia', 1)
             cursor.execute(query_insert, dados_cliente)
-            dados_cliente = ('Tauá', 5)
+            dados_cliente = ('Tauá', 2)
             cursor.execute(query_insert, dados_cliente)
 
             conn.commit()
@@ -41,11 +43,11 @@ try:
             query_insert = 'INSERT INTO "Municipios" (municipio, fk_coads) \
                             VALUES (%s, %s);'
 
-            dados_cliente = ('Fortaleza', 3)
+            dados_cliente = ('Fortaleza', 1)
             cursor.execute(query_insert, dados_cliente)
-            dados_cliente = ('Caucaia', 4)
+            dados_cliente = ('Caucaia', 2)
             cursor.execute(query_insert, dados_cliente)
-            dados_cliente = ('Tauá', 5)
+            dados_cliente = ('Tauá', 3)
             cursor.execute(query_insert, dados_cliente) 
 
             conn.commit()
@@ -54,26 +56,27 @@ try:
             query_delete = 'DELETE FROM "Superintendencias_Ceara" \
                             WHERE id >= 6;'
 
-            cursor.execute(query_delete)"""
+            cursor.execute(query_delete)
+            """
 
             query_insert = 'INSERT INTO "Notificaçoes" (nome, tipo_evento, categoria, data_envio, data_ocorrencia, pessoas_animais_infectados_afetados, \
                             local_ocorrencia, estado, municipio, continuidade_situacao, descricao, acs_ace_id,  \
                             status, rascunho, verificada) \
                             VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s);'
             
-            dados_cliente = ('Alagamento', 'DESASTRE', 'Alagamento', datetime.now(), datetime.now(), 10, 'Casa', 'Ceará', 'Caucaia', 'Sim', 
-                             'Alagamento severo na região de caucaia', 1, 'PENDENTE', False, False)
+            dados_cliente = ('Doença aviária', 'EPIZOOTIA', 'Doença de Aves', datetime.now(), data_ocorrencia, 15, 'Ambiente Rural', 'Ceará', 'Tauá', 'Não sei', 
+                             'Várias aves com doença aviária', 1, 'PENDENTE', False, False)
             cursor.execute(query_insert, dados_cliente)
 
             
             
-            #query_delete = 'TRUNCATE TABLE "Notificaçoes" RESTART IDENTITY CASCADE'
+            #query_delete = 'TRUNCATE TABLE "Superintendencias_Ceara" RESTART IDENTITY CASCADE'
             
             #cursor.execute(query_delete)
 
             # CRÍTICO: Confirma a transação no banco de dados
-            conn.commit()
-            print("Registro inserido com sucesso!")
+            #conn.commit()
+            #print("Registro inserido com sucesso!")
 
 except Exception as error:
     print(f"Erro ao inserir dados: {error}")
